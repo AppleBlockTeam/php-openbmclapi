@@ -37,6 +37,10 @@ class ParseFileList {
         $bar->display();
 
         for ($i = 0; $i < $totalFiles; $i++) {
+            global $shouldExit;
+            if ($shouldExit) {
+                break;
+            }
             $this->files[] = new BMCLAPIFile(
                 $this->readString($memoryStream),
                 $this->readString($memoryStream),
@@ -190,6 +194,10 @@ class download {
         $bar->setDetails("[Downloader]");
         $bar->display();
         foreach ($this->filesList as $file) {
+            global $shouldExit;
+            if ($shouldExit) {
+                break;
+            }
             $this->semaphore->push(true);
             go(function () use ($file,$bar) {
                 $client = new Swoole\Coroutine\Http\Client('openbmclapi.bangbang93.com', 443, true);
@@ -228,6 +236,10 @@ class FilesCheck {
         $bar->setDetails("[FileCheck]");
         $bar->display();
         foreach ($this->filesList as $file) {
+            global $shouldExit;
+            if ($shouldExit) {
+                break;
+            }
             if (!file_exists(DOWNLOAD_DIR.'/'.substr($file->hash, 0, 2).'/'.$file->hash)){
                 $this->Missfile[] = new BMCLAPIFile(
                     $file->path,

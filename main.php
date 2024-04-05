@@ -23,11 +23,15 @@ run(function()use ($config){
     //注册信号处理器
     function registerSigintHandler() {
         global $timerId;
+        $shouldExit = false; // 初始化为false
         Swoole\Process::signal(SIGINT, function ($signo) use ($timerId) {
             try {
+                global $shouldExit;
+                $shouldExit = true; // 设置退出标志
                 Swoole\Timer::clear($timerId);
+                echo PHP_EOL;
                 mlog("主动退出...");
-                exit;
+                exit();
             } catch (\Swoole\ExitException $e) {
                 //var_dump($e->getMessage());
                 //var_dump($e->getStatus() === 1);
@@ -71,6 +75,9 @@ run(function()use ($config){
         }
     }
     else{
-        mlog("检查文件完毕,没有缺失/损坏");
+        global $shouldExit;
+        if (!$shouldExit){
+            mlog("检查文件完毕,没有缺失/损坏");
+        }
     }
 });
