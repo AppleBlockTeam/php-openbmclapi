@@ -58,7 +58,7 @@ run(function()use ($config){
     if (is_array($Missfile)){
         mlog("缺失/损坏".count($Missfile)."个文件");
         while(is_array($Missfile)){
-            $download = new download($Missfile,$config['maxConcurrent']);
+            $download = new download($Missfile,$config['MaxConcurrent']);
             $download->downloadFiles();
             $FilesCheck = new FilesCheck($Missfile);
             $Missfile = $FilesCheck->FilesCheckerhash();

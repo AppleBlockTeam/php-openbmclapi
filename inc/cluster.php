@@ -138,18 +138,50 @@ class download {
                     'User-Agent' => 'openbmclapi-cluster/' . VERSION . '    ' . 'PHP-OpenBmclApi/0.0.1-dev',
                     'Accept' => '*/*',
                 ]);
-            if (!$client->download($location_url['path'].'?'.($location_url['query']??''),DOWNLOAD_DIR.'/'.substr($file->hash, 0, 2).'/'.$file->hash)) {
-                echo PHP_EOL;
-                mlog("{$file->path} Download Failed: {$client->errMsg} From Node: {$location_url['host']}:{$location_url['port']}",2);
-                $bar->progress();
-                return false;
+                $downloadr = $client->download($location_url['path'].'?'.($location_url['query']??''),DOWNLOAD_DIR.'/'.substr($file->hash, 0, 2).'/'.$file->hash);
+            if (in_array($client->statusCode, [301, 302])) {
+                while(in_array($client->statusCode, [301, 302])){
+                    $location_url = parse_url($client->getHeaders()['location']);
+                    $client->close();
+                    if (!isset($array['port'])){
+                        $location_url['port'] = 443;
+                    }
+                    $client = new Swoole\Coroutine\Http\Client($location_url['host'], $location_url['port'], true);
+                    $client->set([
+                        'timeout' => 60
+                    ]);
+                    $client->setHeaders([
+                        'Host' => $location_url['host'],
+                        'User-Agent' => 'openbmclapi-cluster/' . VERSION . '    ' . 'PHP-OpenBmclApi/0.0.1-dev',
+                        'Accept' => '*/*',
+                    ]);
+                    $downloadr = $client->download($location_url['path'].'?'.($location_url['query']??''),DOWNLOAD_DIR.'/'.substr($file->hash, 0, 2).'/'.$file->hash);
+                }
+                if (!$downloadr) {
+                    echo PHP_EOL;
+                    mlog("{$file->path} Download Failed: {$client->errMsg} From Node: {$location_url['host']}:{$location_url['port']}",2);
+                    $bar->progress();
+                    return false;
+                }
+                else{
+                    //mlog("Download Success");
+                    $bar->progress();
+                    return true;
+                }
             }
             else{
-                //mlog("Download Success");
-                $bar->progress();
-                return true;
+                if (!$downloadr) {
+                    echo PHP_EOL;
+                    mlog("{$file->path} Download Failed: {$client->errMsg} From Node: {$location_url['host']}:{$location_url['port']}",2);
+                    $bar->progress();
+                    return false;
+                }
+                else{
+                    //mlog("Download Success");
+                    $bar->progress();
+                    return true;
+                }
             }
-            return true;
         }
     }
 
