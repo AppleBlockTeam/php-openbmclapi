@@ -5,7 +5,7 @@ use function Swoole\Timer;
 require './config.php';
 const VERSION = '1.10.3';
 const DOWNLOAD_DIR = "./cache";
-if ($config['Staging'] = true){
+if ($config['Staging'] == true){
     define('OPENBMCLAPI', 'openbmclapi.staging.bangbang93.com');
 }
 else{
