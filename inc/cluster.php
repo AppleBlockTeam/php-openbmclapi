@@ -83,8 +83,9 @@ class cluster{
         $this->version = $version;
     }
     public function getFileList() {
-        if (!file_exists("./cache/filecache")) {
-            mkdir("./cache/filecache",0777,true);
+        global $DOWNLOAD_DIR;
+        if (!file_exists($DOWNLOAD_DIR."/filecache")) {
+            mkdir($DOWNLOAD_DIR."/filecache",0777,true);
         }
         $client = new Client(OPENBMCLAPI,443,true);
         $client->set(['timeout' => -1]);
@@ -95,14 +96,14 @@ class cluster{
             'Authorization' => "Bearer {$this->token}"
         ]);
         mlog("Start FileList Download");
-        if (!$client->download('/openbmclapi/files',DOWNLOAD_DIR.'/filecache/filelist.zstd')) {
+        if (!$client->download('/openbmclapi/files',$DOWNLOAD_DIR.'/filecache/filelist.zstd')) {
             mlog("FileList Download Failed",2);
             $client->close();
         }
         else{
             mlog("FileList Download Success");
             $client->close();
-            $this->compressedData = file_get_contents("compress.zstd://".DOWNLOAD_DIR."/filecache/filelist.zstd");
+            $this->compressedData = file_get_contents("compress.zstd://".$DOWNLOAD_DIR."/filecache/filelist.zstd");
         }
         $parser = new ParseFileList($this->compressedData);
         $files = $parser->parse();
@@ -122,7 +123,8 @@ class download {
     }
 
     private function downloader(Swoole\Coroutine\Http\Client $client, $file,$bar) {
-        $filePath = DOWNLOAD_DIR . '/' . substr($file->hash, 0, 2) . '/';
+        global $DOWNLOAD_DIR;
+        $filePath = $DOWNLOAD_DIR . '/' . substr($file->hash, 0, 2) . '/';
         if (!file_exists($filePath)) {
             mkdir($filePath, 0777, true);
         }
@@ -139,10 +141,10 @@ class download {
                 ]);
                 $client->setHeaders([
                     'Host' => $location_url['host'],
-                    'User-Agent' => 'openbmclapi-cluster/' . VERSION . '    ' . 'PHP-OpenBmclApi/0.0.1-dev',
+                    'User-Agent' => USERAGENT,
                     'Accept' => '*/*',
                 ]);
-                $downloadr = $client->download($location_url['path'].'?'.($location_url['query']??''),DOWNLOAD_DIR.'/'.substr($file->hash, 0, 2).'/'.$file->hash);
+                $downloadr = $client->download($location_url['path'].'?'.($location_url['query']??''),$DOWNLOAD_DIR.'/'.substr($file->hash, 0, 2).'/'.$file->hash);
             if (in_array($client->statusCode, [301, 302])) {
                 while(in_array($client->statusCode, [301, 302])){
                     $location_url = parse_url($client->getHeaders()['location']);
@@ -156,10 +158,10 @@ class download {
                     ]);
                     $client->setHeaders([
                         'Host' => $location_url['host'],
-                        'User-Agent' => 'openbmclapi-cluster/' . VERSION . '    ' . 'PHP-OpenBmclApi/0.0.1-dev',
+                        'User-Agent' => USERAGENT,
                         'Accept' => '*/*',
                     ]);
-                    $downloadr = $client->download($location_url['path'].'?'.($location_url['query']??''),DOWNLOAD_DIR.'/'.substr($file->hash, 0, 2).'/'.$file->hash);
+                    $downloadr = $client->download($location_url['path'].'?'.($location_url['query']??''),$DOWNLOAD_DIR.'/'.substr($file->hash, 0, 2).'/'.$file->hash);
                 }
                 if (!$downloadr) {
                     echo PHP_EOL;
@@ -206,7 +208,7 @@ class download {
                 ]);
                 $client->setHeaders([
                     'Host' => 'openbmclapi.bangbang93.com',
-                    'User-Agent' => 'openbmclapi-cluster/' . VERSION . ' ' . 'PHP-OpenBmclApi/0.0.1-dev',
+                    'User-Agent' => USERAGENT,
                     'Accept' => '*/*',
                 ]);
                 if ($this->downloader($client, $file,$bar)) {
@@ -237,10 +239,11 @@ class FilesCheck {
         $bar->display();
         foreach ($this->filesList as $file) {
             global $shouldExit;
+            global $DOWNLOAD_DIR;
             if ($shouldExit) {
                 break;
             }
-            if (!file_exists(DOWNLOAD_DIR.'/'.substr($file->hash, 0, 2).'/'.$file->hash)){
+            if (!file_exists($DOWNLOAD_DIR.'/'.substr($file->hash, 0, 2).'/'.$file->hash)){
                 $this->Missfile[] = new BMCLAPIFile(
                     $file->path,
                     $file->hash,
@@ -249,7 +252,7 @@ class FilesCheck {
                 );
             }
             else{
-                if (hash_file('sha1',DOWNLOAD_DIR.'/'.substr($file->hash, 0, 2).'/'.$file->hash) != $file->hash) {
+                if (hash_file('sha1',$DOWNLOAD_DIR.'/'.substr($file->hash, 0, 2).'/'.$file->hash) != $file->hash) {
                     $this->Missfile[] = new BMCLAPIFile(
                         $file->path,
                         $file->hash,
