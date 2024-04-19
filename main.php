@@ -12,10 +12,10 @@ const USERAGENT = 'openbmclapi-cluster/' . VERSION . '    ' . 'PHP-OpenBmclApi/'
 const OPENBMCLAPIURL = 'openbmclapi.bangbang93.com';
 global $tokendata;
 $list = glob('./inc/*.php');
-    foreach ($list as $file) {
-        $file = explode('/', $file)['2'];
-        require './inc/' . $file;
-    }
+foreach ($list as $file) {
+    $file = explode('/', $file)['2'];
+    require './inc/' . $file;
+}
 echo"OpenBmclApionPHP v0.0.1-dev". PHP_EOL;
 run(function()use ($config){
     //注册信号处理器
@@ -75,6 +75,33 @@ run(function()use ($config){
         global $shouldExit;
         if (!$shouldExit){
             mlog("检查文件完毕,没有缺失/损坏");
+        }
+    }
+    global $shouldExit;
+    if (!is_array($Missfile) && !$shouldExit){//判断Missfile是否为空和是否是主动退出
+        $socketio = new socketio(OPENBMCLAPIURL,$tokendata['token']);
+        mlog("正在连接主控");
+        Coroutine::create(function () use ($socketio){
+            $socketio->connect();
+        });
+        Coroutine::sleep(1);
+        if (file_exists('./cert/'.$config['CLUSTER_ID'].'.cert') && file_exists('./cert/'.$config['CLUSTER_ID'].'.key')) {
+            
+        } else {
+            mlog("正在获取证书");
+            if (!file_exists("./cert")) {
+                mkdir("./cert",0777,true);
+            }
+            $socketio->ack("request-cert");
+            Coroutine::sleep(1);
+            $allcert = $socketio->Getcert();
+            mlog("已获取证书,到期时间{$allcert['0']['1']['expires']}");
+            $cert = fopen('./cert/'.$config['CLUSTER_ID'].'.cert', 'w');
+            $Writtencert = fwrite($cert, $allcert['0']['1']['cert']);
+            fclose($cert);
+            $cert = fopen('./cert/'.$config['CLUSTER_ID'].'.key', 'w');
+            $Writtencert = fwrite($cert, $allcert['0']['1']['key']);
+            fclose($cert);
         }
     }
 });
