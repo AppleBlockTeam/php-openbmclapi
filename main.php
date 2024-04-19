@@ -4,16 +4,12 @@ use function Swoole\Coroutine\run;
 use function Swoole\Timer;
 declare(ticks=1)
 require './config.php';
+const PHPOBAVERSION = '0.0.1-dev';
 const VERSION = '1.10.3';
 global $DOWNLOAD_DIR;
 $DOWNLOAD_DIR = $config['cache_dir'];
-const USERAGENT = 'openbmclapi-cluster/' . VERSION . '    ' . 'PHP-OpenBmclApi/0.0.1-dev';
-if ($config['Staging'] == true){
-    define('OPENBMCLAPI', 'openbmclapi.staging.bangbang93.com');
-}
-else{
-    define('OPENBMCLAPI', 'openbmclapi.bangbang93.com');
-}
+const USERAGENT = 'openbmclapi-cluster/' . VERSION . '    ' . 'PHP-OpenBmclApi/'.PHPOBAVERSION;
+const OPENBMCLAPIURL = 'openbmclapi.bangbang93.com';
 global $tokendata;
 $list = glob('./inc/*.php');
     foreach ($list as $file) {

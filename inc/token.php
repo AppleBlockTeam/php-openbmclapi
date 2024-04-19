@@ -11,7 +11,7 @@ class token{
     }
     public function gettoken() {
         //获取challenge
-        $client = new Client(OPENBMCLAPI,443,true);
+        $client = new Client(OPENBMCLAPIURL,443,true);
         $client->setHeaders([
             'User-Agent' => 'openbmclapi-cluster/'.$this->version,
             'Content-Type' => 'application/json; charset=utf-8',
@@ -22,7 +22,7 @@ class token{
         $challenge = json_decode($client->body, true);
         $signature = hash_hmac('sha256', $challenge['challenge'], $this->clusterSecret);
         //获取token和ttl
-        $client = new Client(OPENBMCLAPI,443,true);
+        $client = new Client(OPENBMCLAPIURL,443,true);
         $client->post(
             '/openbmclapi-agent/token',
             array(

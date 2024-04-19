@@ -87,10 +87,10 @@ class cluster{
         if (!file_exists($DOWNLOAD_DIR."/filecache")) {
             mkdir($DOWNLOAD_DIR."/filecache",0777,true);
         }
-        $client = new Client(OPENBMCLAPI,443,true);
+        $client = new Client(OPENBMCLAPIURL,443,true);
         $client->set(['timeout' => -1]);
         $client->setHeaders([
-            'Host' => OPENBMCLAPI,
+            'Host' => OPENBMCLAPIURL,
             'User-Agent' => 'openbmclapi-cluster/'.$this->version,
             'Accept' => '*',
             'Authorization' => "Bearer {$this->token}"
@@ -144,7 +144,7 @@ class download {
                     'User-Agent' => USERAGENT,
                     'Accept' => '*/*',
                 ]);
-                $downloadr = $client->download($location_url['path'].'?'.($location_url['query']??''),$DOWNLOAD_DIR.'/'.substr($file->hash, 0, 2).'/'.$file->hash);
+                $downloader = $client->download($location_url['path'].'?'.($location_url['query']??''),$DOWNLOAD_DIR.'/'.substr($file->hash, 0, 2).'/'.$file->hash);
             if (in_array($client->statusCode, [301, 302])) {
                 while(in_array($client->statusCode, [301, 302])){
                     $location_url = parse_url($client->getHeaders()['location']);
@@ -161,9 +161,9 @@ class download {
                         'User-Agent' => USERAGENT,
                         'Accept' => '*/*',
                     ]);
-                    $downloadr = $client->download($location_url['path'].'?'.($location_url['query']??''),$DOWNLOAD_DIR.'/'.substr($file->hash, 0, 2).'/'.$file->hash);
+                    $downloader = $client->download($location_url['path'].'?'.($location_url['query']??''),$DOWNLOAD_DIR.'/'.substr($file->hash, 0, 2).'/'.$file->hash);
                 }
-                if (!$downloadr) {
+                if (!$downloader) {
                     echo PHP_EOL;
                     mlog("{$file->path} Download Failed: {$client->errMsg} From Node: {$location_url['host']}:{$location_url['port']}",2);
                     $bar->progress();
@@ -176,7 +176,7 @@ class download {
                 }
             }
             else{
-                if (!$downloadr) {
+                if (!$downloader) {
                     echo PHP_EOL;
                     mlog("{$file->path} Download Failed: {$client->errMsg} From Node: {$location_url['host']}:{$location_url['port']}",2);
                     $bar->progress();
