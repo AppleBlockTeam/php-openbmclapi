@@ -85,7 +85,7 @@ run(function()use ($config){
             $socketio->connect();
         });
         Coroutine::sleep(1);
-        if (file_exists('./cert/'.$config['CLUSTER_ID'].'.cert') && file_exists('./cert/'.$config['CLUSTER_ID'].'.key')) {
+        if (file_exists('./cert/'.$config['CLUSTER_ID'].'.crt') && file_exists('./cert/'.$config['CLUSTER_ID'].'.key')) {
             
         } else {
             mlog("正在获取证书");
@@ -96,7 +96,7 @@ run(function()use ($config){
             Coroutine::sleep(1);
             $allcert = $socketio->Getcert();
             mlog("已获取证书,到期时间{$allcert['0']['1']['expires']}");
-            $cert = fopen('./cert/'.$config['CLUSTER_ID'].'.cert', 'w');
+            $cert = fopen('./cert/'.$config['CLUSTER_ID'].'.crt', 'w');
             $Writtencert = fwrite($cert, $allcert['0']['1']['cert']);
             fclose($cert);
             $cert = fopen('./cert/'.$config['CLUSTER_ID'].'.key', 'w');
