@@ -231,6 +231,7 @@ class FilesCheck {
 
     public function __construct($filesList) {
         $this->filesList = $filesList;
+        mlog("检查策略:hash");
     }
 
     public function FilesCheckerhash() {
@@ -241,6 +242,7 @@ class FilesCheck {
             global $shouldExit;
             global $DOWNLOAD_DIR;
             if ($shouldExit) {
+                return;
                 break;
             }
             if (!file_exists($DOWNLOAD_DIR.'/'.substr($file->hash, 0, 2).'/'.$file->hash)){

@@ -54,7 +54,6 @@ run(function()use ($config){
     //下载文件列表
     $cluster = new cluster($tokendata['token'],VERSION);
     $files = $cluster->getFileList();
-    mlog("检查策略:hash");
     $FilesCheck = new FilesCheck($files);
     $Missfile = $FilesCheck->FilesCheckerhash();
     if (is_array($Missfile)){
