@@ -133,6 +133,7 @@ class download {
             mlog("Error connecting to the main control:{$client->errMsg}",2);
             return false;
         } else {
+            if(isset($client->getHeaders()['location'])){
             $location_url = parse_url($client->getHeaders()['location']);
             $client->close();
             $client = new Swoole\Coroutine\Http\Client($location_url['host'], $location_url['port'], true);
@@ -188,6 +189,11 @@ class download {
                     return true;
                 }
             }
+        }
+        else{
+            $bar->progress();
+            return false;
+        }
         }
     }
 
