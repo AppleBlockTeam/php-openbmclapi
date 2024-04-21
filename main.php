@@ -50,7 +50,6 @@ run(function()use ($config){
         $tokendata = $token->gettoken();
         mlog("GetNewToken:".$tokendata['token'],1);
     });
-    global $socketio;
     registerSigintHandler();
     mlog("Timer start on ID{$timerId}",1);
     
