@@ -37,6 +37,7 @@ class fileserver {
             mlog(" Serve {$code} | {$request->server['remote_addr']} | {$request->server['server_protocol']} | {$url} | {$request->header['user-agent']};") ;
         });
         $server->handle('/download', function ($request, $response) {
+            $code = 200;
             $response->end("Test");
             echo "download";
             if(!isset($request->server['query_string'])){
