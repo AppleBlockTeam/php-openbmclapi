@@ -39,7 +39,13 @@ class fileserver {
         $server->handle('/download', function ($request, $response) {
             $response->end("Test");
             echo "download";
-            mlog(" Serve {$code} | {$request->server['remote_addr']} | {$request->server['server_protocol']} | {$request->server['request_uri']}?{$request->server['query_string']} | {$request->header['user-agent']};") ;
+            if(!isset($request->server['query_string'])){
+                $url = $request->server['request_uri'];
+            }
+            else{
+                $url = $request->server['request_uri']."?".$request->server['query_string'];
+            }
+            mlog(" Serve {$code} | {$request->server['remote_addr']} | {$request->server['server_protocol']} | {$url} | {$request->header['user-agent']};") ;
         });
         $server->handle('/measure', function ($request, $response) {
             $measuresize = str_replace('/measure/', '', $request->server['request_uri']);
