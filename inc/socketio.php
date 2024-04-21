@@ -47,6 +47,8 @@ class socketio {
             }
             if ($code[0] == '41'){
                 mlog("[socket.io]Close Connection");
+                global $pid;
+                posix_kill($pid, SIGINT);
                 $client->close();
                 return;
             }

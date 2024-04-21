@@ -8,7 +8,7 @@ const PHPOBAVERSION = '0.0.1-dev';
 const VERSION = '1.10.3';
 global $DOWNLOAD_DIR;
 $DOWNLOAD_DIR = $config['cache_dir'];
-const USERAGENT = 'openbmclapi-cluster/' . VERSION . '    ' . 'PHP-OpenBmclApi/'.PHPOBAVERSION;
+const USERAGENT = 'openbmclapi-cluster/' . VERSION . '  ' . 'PHP-OpenBmclApi/'.PHPOBAVERSION;
 const OPENBMCLAPIURL = 'openbmclapi.bangbang93.com';
 global $tokendata;
 $list = glob('./inc/*.php');
@@ -16,6 +16,8 @@ foreach ($list as $file) {
     $file = explode('/', $file)['2'];
     require './inc/' . $file;
 }
+global $pid;
+$pid = getmypid();
 echo"OpenBmclApionPHP v0.0.1-dev". PHP_EOL;
 run(function()use ($config){
     //注册信号处理器
@@ -28,7 +30,7 @@ run(function()use ($config){
                 $shouldExit = true; // 设置退出标志
                 Swoole\Timer::clear($timerId);
                 echo PHP_EOL;
-                mlog("主动退出...");
+                mlog("正在退出...");
                 exit();
             } catch (\Swoole\ExitException $e) {
                 //var_dump($e->getMessage());
@@ -48,6 +50,7 @@ run(function()use ($config){
         $tokendata = $token->gettoken();
         mlog("GetNewToken:".$tokendata['token'],1);
     });
+    global $socketio;
     registerSigintHandler();
     mlog("Timer start on ID{$timerId}",1);
     
