@@ -8,12 +8,14 @@ class fileserver {
     private $key;
     private $server;
     private $dir;
-    public function __construct($host,$port,$cert,$key,$dir) {
+    private $secret;
+    public function __construct($host,$port,$cert,$key,$dir,$secret) {
         $this->host = $host;
         $this->port = $port;
         $this->cert = $cert;
         $this->key = $key;
         $this->dir = $dir;
+        $this->secret = $secret;
     }
 
     public function startserver() {
@@ -53,21 +55,32 @@ class fileserver {
             if (!file_exists($this->dir.'/measure')) {
                 mkdir($this->dir.'/measure',0777,true);
             }
+            if(isset($request->server['query_string'])){
             if(is_numeric($measuresize)){
-                if (!file_exists($this->dir.'/measure/'.$measuresize)) {
-                    $file = fopen($this->dir.'/measure/'.$measuresize, 'w+');
-                    $bytesToWrite = $measuresize * 1048576;
-                    $fillChar = str_repeat("\0", 1024);
-                    while ($bytesToWrite > 0) {
-                        $chunkSize = min(1024, $bytesToWrite);
-                        fwrite($file, substr($fillChar, 0, $chunkSize));
-                        $bytesToWrite -= $chunkSize;
+                parse_str($request->server['query_string'], $allurl);
+                if ($this->check_sign($request->server['request_uri'], $this->secret, $allurl['s'], $allurl['e'])){
+                    if (!file_exists($this->dir.'/measure/'.$measuresize)) {
+                        $file = fopen($this->dir.'/measure/'.$measuresize, 'w+');
+                        $bytesToWrite = $measuresize * 1048576;
+                        $fillChar = str_repeat("\0", 1024);
+                        while ($bytesToWrite > 0) {
+                            $chunkSize = min(1024, $bytesToWrite);
+                            fwrite($file, substr($fillChar, 0, $chunkSize));
+                            $bytesToWrite -= $chunkSize;
+                        }
+                        fclose($file);
                     }
-                    fclose($file);
+                    $code = 200;
+                    $response->header('Content-Type', 'application/octet-stream');
+                    $response->sendfile($this->dir.'/measure/'.$measuresize);
                 }
-                $code = 200;
-                $response->header('Content-Type', 'application/octet-stream');
-                $response->sendfile($this->dir.'/measure/'.$measuresize);
+                else{
+                    $code = 403;
+                    $response->status($code);
+                    $response->header('Content-Type', 'text/html; charset=utf-8');
+                    $response->end("<title>Error</title><pre>Forbidden</pre>");
+                }
+            }
             }
             else{
                 $code = 404;
@@ -90,4 +103,19 @@ class fileserver {
         mlog("Stop Http Server");
         $this->server->shutdown();
     }
+    //你问我这段函数为什么要放在server里面? 因为只有server需要check_sign(
+    public function check_sign(string $hash, string $secret, string $s, string $e): bool {
+        try {
+            $t = intval($e, 36);
+        } catch (\Exception $ex) {
+            return false;
+        }
+      
+        $sha1 = hash_init('sha1');
+        hash_update($sha1, $secret);
+        hash_update($sha1, $hash);
+        hash_update($sha1, $e);
+        $computedSignature = rtrim(strtr(base64_encode(hash_final($sha1,true)), '+/', '-_'), '=');
+        return ($computedSignature === $s && time() * 1000 <= $t);
+      }
 }

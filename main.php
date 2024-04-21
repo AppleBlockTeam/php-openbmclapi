@@ -106,7 +106,7 @@ run(function()use ($config){
         }
         global $httpserver;
         global $DOWNLOAD_DIR;
-        $httpserver = new fileserver($config['cluster']['host'],$config['cluster']['port'],$config['cluster']['CLUSTER_ID'].'.crt',$config['cluster']['CLUSTER_ID'].'.key',$DOWNLOAD_DIR);
+        $httpserver = new fileserver($config['cluster']['host'],$config['cluster']['port'],$config['cluster']['CLUSTER_ID'].'.crt',$config['cluster']['CLUSTER_ID'].'.key',$DOWNLOAD_DIR,$config['cluster']['CLUSTER_SECRET']);
         Coroutine::create(function () use ($config,$httpserver){
             $httpserver->startserver();
         });
