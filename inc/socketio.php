@@ -54,16 +54,22 @@ class socketio {
             }
             if ($code[0] == '430'){
                 $jsondata = json_decode(substr($data, strlen($code[0])),true);
-                $this->certdata = $jsondata;
+                mlog("[socket.io]Got data {$jsondata[0][0]["message"]}");
                 //mlog("[socket.io]Got MESSAGE {$data}",1);
+            }
+            if ($code[0] == '423'){
+                $data = substr($data, strlen($code[0]));
+                mlog("[socket.io]Got data {$data}");
             }
             //var_dump($data);
             Coroutine::sleep(0.1);
         }
         global $shouldExit;
+        global $httpserver;
             if ($shouldExit) {
                 mlog("[socket.io]Close Connection");
                 $client->close();
+                $httpserver->stopserver();
                 return;
             }
     }
@@ -98,5 +104,23 @@ class socketio {
     }
     public function Getclient() {
         return $this->client;
+    }
+    public function enable($host,$port) {
+        if (in_array($host, ["0.0.0.0", "127.0.0.1"])){
+            $host = preg_replace('/\R/', '', file_get_contents('http://ip.3322.net'));
+        }
+        mlog("正在enable节点");
+        $data = [
+            'host' => $host,
+            'port' => $port,
+            'version' => VERSION,
+            'byoc' => false,
+            'noFastEnable' => false,
+            'flavor' =>[
+                'runtime' => 'PHP-'.substr(PHP_VERSION,0,3).'/'.php_uname('s'),
+                'storage' => 'file'
+            ]
+        ];
+        $this->ack("enable",$data);
     }
 }

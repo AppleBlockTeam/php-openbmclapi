@@ -40,7 +40,7 @@ run(function()use ($config){
         });
     }
     //获取初次Token
-    $token = new token($config['CLUSTER_ID'],$config['CLUSTER_SECRET'],VERSION);
+    $token = new token($config['cluster']['CLUSTER_ID'],$config['cluster']['CLUSTER_SECRET'],VERSION);
     $tokendata = $token->gettoken();
     mlog("GetToken:".$tokendata['token'],1);
     mlog("TokenTTL:".$tokendata['upttl'],1);
@@ -50,6 +50,7 @@ run(function()use ($config){
         $tokendata = $token->gettoken();
         mlog("GetNewToken:".$tokendata['token'],1);
     });
+    global $socketio;
     registerSigintHandler();
     mlog("Timer start on ID{$timerId}",1);
     
@@ -87,9 +88,7 @@ run(function()use ($config){
             $socketio->connect();
         });
         Coroutine::sleep(1);
-        if (file_exists('./cert/'.$config['CLUSTER_ID'].'.crt') && file_exists('./cert/'.$config['CLUSTER_ID'].'.key')) {
-            
-        } else {
+        if (!file_exists('./cert/'.$config['cluster']['CLUSTER_ID'].'.crt') && !file_exists('./cert/'.$config['cluster']['CLUSTER_ID'].'.key')) {
             mlog("正在获取证书");
             if (!file_exists("./cert")) {
                 mkdir("./cert",0777,true);
@@ -98,12 +97,19 @@ run(function()use ($config){
             Coroutine::sleep(1);
             $allcert = $socketio->Getcert();
             mlog("已获取证书,到期时间{$allcert['0']['1']['expires']}");
-            $cert = fopen('./cert/'.$config['CLUSTER_ID'].'.crt', 'w');
+            $cert = fopen('./cert/'.$config['cluster']['CLUSTER_ID'].'.crt', 'w');
             $Writtencert = fwrite($cert, $allcert['0']['1']['cert']);
             fclose($cert);
-            $cert = fopen('./cert/'.$config['CLUSTER_ID'].'.key', 'w');
+            $cert = fopen('./cert/'.$config['cluster']['CLUSTER_ID'].'.key', 'w');
             $Writtencert = fwrite($cert, $allcert['0']['1']['key']);
             fclose($cert);
         }
+        global $httpserver;
+        global $DOWNLOAD_DIR;
+        $httpserver = new fileserver($config['cluster']['host'],$config['cluster']['port'],$config['cluster']['CLUSTER_ID'].'.crt',$config['cluster']['CLUSTER_ID'].'.key',$DOWNLOAD_DIR);
+        Coroutine::create(function () use ($config,$httpserver){
+            $httpserver->startserver();
+        });
+        $socketio->enable($config['cluster']['public_host'],$config['cluster']['public_port']);
     }
 });
