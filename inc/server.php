@@ -43,7 +43,6 @@ class fileserver {
         });
         $server->handle('/measure', function ($request, $response) {
             $measuresize = str_replace('/measure/', '', $request->server['request_uri']);
-            echo $measuresize;
             if (!file_exists($this->dir.'/measure')) {
                 mkdir($this->dir.'/measure',0777,true);
             }
