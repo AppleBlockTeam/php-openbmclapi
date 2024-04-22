@@ -39,9 +39,39 @@ class fileserver {
             mlog(" Serve {$code} | {$request->server['remote_addr']} | {$request->server['server_protocol']} | {$url} | {$request->header['user-agent']};") ;
         });
         $server->handle('/download', function ($request, $response) {
-            $code = 200;
-            $response->end("Test");
-            echo "download";
+            $downloadhash = str_replace('/download/', '', $request->server['request_uri']);
+            if(isset($request->server['query_string'])){
+                parse_str($request->server['query_string'], $allurl);
+                if ($this->check_sign($downloadhash, $this->secret, $allurl['s'], $allurl['e'])){
+                    if(isset($request->header['range'])){
+                        preg_match('/bytes=(\d+)-(\d+)/', $request->header['range'], $matches);
+                        $start_byte = (int) $matches[1];
+                        $end_byte = (int) $matches[2];
+                        $length = $end_byte - $start_byte + 1;
+                        $fileSize = filesize($this->dir.'/'.substr($downloadhash, 0, 2).'/'.$downloadhash);
+                        $code = 206;
+                        $response->header('Content-Type', 'application/octet-stream');
+                        $response->sendfile($this->dir.'/'.substr($downloadhash, 0, 2).'/'.$downloadhash,$start_byte,$length);
+                    }
+                    else{
+                        $code = 200;
+                        $response->header('Content-Type', 'application/octet-stream');
+                        $response->sendfile($this->dir.'/'.substr($downloadhash, 0, 2).'/'.$downloadhash);
+                    }
+                }
+                else{
+                    $code = 403;
+                    $response->status($code);
+                    $response->header('Content-Type', 'text/html; charset=utf-8');
+                    $response->end("<title>Error</title><pre>invalid sign</pre>");
+                }
+                }
+                else{
+                    $code = 404;
+                    $response->status($code);
+                    $response->header('Content-Type', 'text/html; charset=utf-8');
+                    $response->end("<title>Error</title><pre>404 Not Found</pre>");
+                }
             if(!isset($request->server['query_string'])){
                 $url = $request->server['request_uri'];
             }
