@@ -11,10 +11,9 @@ $DOWNLOAD_DIR = $config['cache_dir'];
 const USERAGENT = 'openbmclapi-cluster/' . VERSION . '  ' . 'PHP-OpenBmclApi/'.PHPOBAVERSION;
 const OPENBMCLAPIURL = 'openbmclapi.bangbang93.com';
 global $tokendata;
-$list = glob('./inc/*.php');
+$list = glob('inc/*.php');
 foreach ($list as $file) {
-    $file = explode('/', $file)['2'];
-    require './inc/' . $file;
+    require $file;
 }
 global $pid;
 $pid = getmypid();
