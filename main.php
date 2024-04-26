@@ -4,7 +4,7 @@ use function Swoole\Coroutine\run;
 use function Swoole\Timer;
 declare(ticks=1)
 require './config.php';
-const PHPOBAVERSION = '0.0.1-dev';
+const PHPOBAVERSION = '0.0.1';
 const VERSION = '1.10.3';
 global $DOWNLOAD_DIR;
 $DOWNLOAD_DIR = $config['cluster']['cache_dir'];
@@ -87,15 +87,26 @@ run(function()use ($config){
             $socketio->connect();
         });
         Coroutine::sleep(1);
+        $socketio->ack("request-cert");
+        Coroutine::sleep(1);
+        $allcert = $socketio->Getcert();
         if (!file_exists('./cert/'.$config['cluster']['CLUSTER_ID'].'.crt') && !file_exists('./cert/'.$config['cluster']['CLUSTER_ID'].'.key')) {
             mlog("正在获取证书");
             if (!file_exists("./cert")) {
                 mkdir("./cert",0777,true);
             }
-            $socketio->ack("request-cert");
-            Coroutine::sleep(1);
-            $allcert = $socketio->Getcert();
             mlog("已获取证书,到期时间{$allcert['0']['1']['expires']}");
+            $cert = fopen('./cert/'.$config['cluster']['CLUSTER_ID'].'.crt', 'w');
+            $Writtencert = fwrite($cert, $allcert['0']['1']['cert']);
+            fclose($cert);
+            $cert = fopen('./cert/'.$config['cluster']['CLUSTER_ID'].'.key', 'w');
+            $Writtencert = fwrite($cert, $allcert['0']['1']['key']);
+            fclose($cert);
+        }
+        $crt = file_get_contents('./cert/'.$config['cluster']['CLUSTER_ID'].'.crt');
+        if ($crt!== $allcert['0']['1']['cert']) {
+            mlog("证书损坏/过期");
+            mlog("已获取新的证书,到期时间{$allcert['0']['1']['expires']}");
             $cert = fopen('./cert/'.$config['cluster']['CLUSTER_ID'].'.crt', 'w');
             $Writtencert = fwrite($cert, $allcert['0']['1']['cert']);
             fclose($cert);

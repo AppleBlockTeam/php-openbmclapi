@@ -54,7 +54,18 @@ class socketio {
             }
             if ($code[0] == '430'){
                 $jsondata = json_decode(substr($data, strlen($code[0])),true);
-                mlog("[socket.io]Got data {$jsondata[0][0]["message"]}");
+                if (isset($jsondata[0][1]['cert'])){
+                    $this->certdata = $jsondata;
+                }
+                elseif (isset($jsondata[0][1])){
+                    mlog("节点已启用 Let's Goooooo!");
+                }
+                elseif (isset($jsondata[0][0]["message"])){
+                    mlog("[socket.io]Got data {$jsondata[0][0]["message"]}");
+                }
+                else {
+                   mlog("[socket.io]Got data {$data}");
+                };
                 //mlog("[socket.io]Got MESSAGE {$data}",1);
             }
             if ($code[0] == '423'){
@@ -80,6 +91,8 @@ class socketio {
             if(isset($this->certdata)){
                 return $this->certdata;
             }
+            Swoole\Coroutine\System::sleep(1);
+            $time++;
         }
         if ($time = 30){
             mlog("Getcert Connected Overtime",2);
