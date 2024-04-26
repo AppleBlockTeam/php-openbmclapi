@@ -7,7 +7,7 @@ require './config.php';
 const PHPOBAVERSION = '0.0.1-dev';
 const VERSION = '1.10.3';
 global $DOWNLOAD_DIR;
-$DOWNLOAD_DIR = $config['cache_dir'];
+$DOWNLOAD_DIR = $config['cluster']['cache_dir'];
 const USERAGENT = 'openbmclapi-cluster/' . VERSION . '  ' . 'PHP-OpenBmclApi/'.PHPOBAVERSION;
 const OPENBMCLAPIURL = 'openbmclapi.bangbang93.com';
 global $tokendata;
@@ -17,7 +17,7 @@ foreach ($list as $file) {
 }
 global $pid;
 $pid = getmypid();
-echo"OpenBmclApionPHP v0.0.1-dev". PHP_EOL;
+echo"OpenBmclApionPHP v". PHPOBAVERSION . "-" . VERSION . "-dev" . PHP_EOL;
 run(function()use ($config){
     //注册信号处理器
     function registerSigintHandler() {
@@ -61,7 +61,7 @@ run(function()use ($config){
     if (is_array($Missfile)){
         mlog("缺失/损坏".count($Missfile)."个文件");
         while(is_array($Missfile)){
-            $download = new download($Missfile,$config['MaxConcurrent']);
+            $download = new download($Missfile,$config['advanced']['MaxConcurrent']);
             $download->downloadFiles();
             $FilesCheck = new FilesCheck($Missfile);
             $Missfile = $FilesCheck->FilesCheckerhash();
