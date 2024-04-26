@@ -59,6 +59,7 @@ $config=[
         "CLUSTER_ID"=> "",
         "CLUSTER_SECRET"=> "",
         "cache_dir"=> "./cache",//缓存文件夹
+        "keepalive"=> 60,//间隔keepalive时间,秒为单位
     ],
     "advanced"=> [
         "MaxConcurrent"=> 10,//下载使用的线程
