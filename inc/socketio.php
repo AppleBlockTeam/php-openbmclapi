@@ -7,10 +7,12 @@ class socketio {
     private $client;
     private $data;
     private $certdata;
+    private $kattl;
     private $Connected = false;
-    public function __construct($url,$token) {
+    public function __construct($url,$token,$kattl) {
         $this->url = $url;
         $this->token = $token;
+        $this->kattl = $kattl;
     }
     public function connect() {
         $this->client = $client = new Client($this->url, 443, true);
@@ -57,8 +59,24 @@ class socketio {
                 if (isset($jsondata[0][1]['cert'])){
                     $this->certdata = $jsondata;
                 }
-                elseif (isset($jsondata[0][1])){
+                elseif (isset($jsondata[0][1]) && $jsondata[0][1] == "1"){
+                    global $enable;
+                    $enable = true;
                     mlog("节点已启用 Let's Goooooo!");
+                    global $kacounters;
+                    $kacounters = new Swoole\Table(1024);
+                    $kacounters->column('hits', Swoole\Table::TYPE_FLOAT);
+                    $kacounters->column('bytes', Swoole\Table::TYPE_FLOAT);
+                    $kacounters->create();
+                    $kacounters->set('1', ['hits' => 0, 'bytes' => 0]);
+                    global $katimeid;
+                    $katimeid = Swoole\Timer::tick($this->kattl*1000, function () use ($kacounters) {
+                        $this->keepalive($kacounters);
+                    });
+                }
+                elseif (isset($jsondata[0][1]) && $this->IsTime($jsondata[0][1])){
+                    global $kadata;
+                    mlog("Keep-alive success: hits={$kadata['hits']} bytes={$kadata['bytes']} Time={$jsondata[0][1]}");
                 }
                 elseif (isset($jsondata[0][0]["message"])){
                     mlog("[socket.io]Got data {$jsondata[0][0]["message"]}");
@@ -78,6 +96,7 @@ class socketio {
         global $shouldExit;
         global $httpserver;
             if ($shouldExit) {
+                Swoole\Timer::clear($katimeid);
                 mlog("[socket.io]Close Connection");
                 $client->close();
                 $httpserver->stopserver();
@@ -135,5 +154,20 @@ class socketio {
             ]
         ];
         $this->ack("enable",$data);
+    }
+    public function keepalive($kacounters) {
+        global $kadata;
+        $kadata = [
+            'time' => intval(microtime(true) * 1000),
+            'hits' => $kacounters->get('1','hits'),
+            'bytes' => $kacounters->get('1','bytes'),
+        ];
+        $this->ack("keep-alive",$kadata);
+        $kacounters->set('1', ['hits' => 0, 'bytes' => 0]);
+    }
+
+    public function IsTime($inputString) {
+        $pattern = '/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/';
+        return preg_match($pattern, $inputString) === 1;
     }
 }

@@ -17,17 +17,19 @@ foreach ($list as $file) {
 }
 global $pid;
 $pid = getmypid();
+global $enable;
+$enable = false;
 echo"OpenBmclApionPHP v". PHPOBAVERSION . "-" . VERSION . "-dev" . PHP_EOL;
 run(function()use ($config){
     //注册信号处理器
     function registerSigintHandler() {
-        global $timerId;
+        global $tokentimeid;
         $shouldExit = false; // 初始化为false
-        Swoole\Process::signal(SIGINT, function ($signo) use ($timerId) {
+        Swoole\Process::signal(SIGINT, function ($signo) use ($tokentimeid) {
             try {
                 global $shouldExit;
                 $shouldExit = true; // 设置退出标志
-                Swoole\Timer::clear($timerId);
+                Swoole\Timer::clear($tokentimeid);
                 echo PHP_EOL;
                 mlog("正在退出...");
                 exit();
@@ -44,14 +46,14 @@ run(function()use ($config){
     mlog("GetToken:".$tokendata['token'],1);
     mlog("TokenTTL:".$tokendata['upttl'],1);
     //启动更新TokenTimer
-    global $timerId;
-    $timerId = Swoole\Timer::tick($tokendata['upttl'], function () use ($token) {
+    global $tokentimeid;
+    $tokentimeid = Swoole\Timer::tick($tokendata['upttl'], function () use ($token) {
         $tokendata = $token->gettoken();
         mlog("GetNewToken:".$tokendata['token'],1);
     });
     global $socketio;
     registerSigintHandler();
-    mlog("Timer start on ID{$timerId}",1);
+    mlog("Timer start on ID{$tokentimeid}",1);
     
     //下载文件列表
     $cluster = new cluster($tokendata['token'],VERSION);
@@ -81,7 +83,7 @@ run(function()use ($config){
     }
     global $shouldExit;
     if (!is_array($Missfile) && !$shouldExit){//判断Missfile是否为空和是否是主动退出
-        $socketio = new socketio(OPENBMCLAPIURL,$tokendata['token']);
+        $socketio = new socketio(OPENBMCLAPIURL,$tokendata['token'],$config['cluster']['keepalive']);
         mlog("正在连接主控");
         Coroutine::create(function () use ($socketio){
             $socketio->connect();
@@ -116,7 +118,7 @@ run(function()use ($config){
         }
         global $httpserver;
         global $DOWNLOAD_DIR;
-        $httpserver = new fileserver($config['cluster']['host'],$config['cluster']['port'],$config['cluster']['CLUSTER_ID'].'.crt',$config['cluster']['CLUSTER_ID'].'.key',$DOWNLOAD_DIR,$config['cluster']['CLUSTER_SECRET']);
+        $httpserver = new fileserver($config['cluster']['host'],$config['cluster']['port'],$config['cluster']['CLUSTER_ID'].'.crt',$config['cluster']['CLUSTER_ID'].'.key',$config['cluster']['CLUSTER_SECRET']);
         Coroutine::create(function () use ($config,$httpserver){
             $httpserver->startserver();
         });

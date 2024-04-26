@@ -9,12 +9,13 @@ class fileserver {
     private $server;
     private $dir;
     private $secret;
-    public function __construct($host,$port,$cert,$key,$dir,$secret) {
+    public function __construct($host,$port,$cert,$key,$secret) {
+        global $DOWNLOAD_DIR;
         $this->host = $host;
         $this->port = $port;
         $this->cert = $cert;
         $this->key = $key;
-        $this->dir = $dir;
+        $this->dir = $DOWNLOAD_DIR;
         $this->secret = $secret;
     }
 
@@ -54,6 +55,12 @@ class fileserver {
                         $response->sendfile($this->dir.'/'.substr($downloadhash, 0, 2).'/'.$downloadhash,$start_byte,$length);
                     }
                     else{
+                        global $enable;
+                        if ($enable){
+                            global $kacounters;
+                            $kacounters->incr('1','hits');
+                            $kacounters->incr('1','bytes',filesize($this->dir.'/'.substr($downloadhash, 0, 2).'/'.$downloadhash));
+                        }
                         $code = 200;
                         $response->header('Content-Type', 'application/octet-stream');
                         $response->sendfile($this->dir.'/'.substr($downloadhash, 0, 2).'/'.$downloadhash);
