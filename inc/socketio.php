@@ -57,7 +57,6 @@ class socketio {
             }
             if ($code[0] == '430'){
                 $jsondata = json_decode(substr($data, strlen($code[0])),true);
-                print_r($jsondata);
                 if (isset($jsondata[0][1]['cert'])){
                     $this->certdata = $jsondata;
                 }

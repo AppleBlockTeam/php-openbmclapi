@@ -99,7 +99,7 @@ run(function()use ($config){
     }
     global $shouldExit;
     if (!is_array($Missfile) && !$shouldExit){//判断Missfile是否为空和是否是主动退出
-        $socketio = new socketio(OPENBMCLAPIURL,$tokendata['token'],$config['cluster']['keepalive']);
+        $socketio = new socketio(OPENBMCLAPIURL,$tokendata['token'],$config['advanced']['keepalive']);
         mlog("正在连接主控");
         Coroutine::create(function () use ($socketio){
             $socketio->connect();
