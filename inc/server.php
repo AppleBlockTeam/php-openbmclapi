@@ -53,6 +53,12 @@ class fileserver {
                         }
                         $length = $end_byte - $start_byte + 1;
                         $fileSize = filesize($this->dir.'/'.substr($downloadhash, 0, 2).'/'.$downloadhash);
+                        global $enable;
+                        if ($enable){
+                            global $kacounters;
+                            $kacounters->incr('1','hits');
+                            $kacounters->incr('1','bytes',$length);
+                        }
                         $code = 206;
                         $response->header('Content-Type', 'application/octet-stream');
                         $response->sendfile($this->dir.'/'.substr($downloadhash, 0, 2).'/'.$downloadhash,$start_byte,$length);
