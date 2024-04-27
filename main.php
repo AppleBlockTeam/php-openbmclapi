@@ -3,13 +3,13 @@ use Swoole\Coroutine;
 use function Swoole\Coroutine\run;
 use function Swoole\Timer;
 declare(ticks=1)
-require './configstaging.php';
+require './config.php';
 const PHPOBAVERSION = '0.0.1';
 const VERSION = '1.10.3';
 global $DOWNLOAD_DIR;
 $DOWNLOAD_DIR = $config['file']['cache_dir'];
 const USERAGENT = 'openbmclapi-cluster/' . VERSION . '  ' . 'PHP-OpenBmclApi/'.PHPOBAVERSION;
-const OPENBMCLAPIURL = 'openbmclapi.staging.bangbang93.com';
+const OPENBMCLAPIURL = 'openbmclapi.bangbang93.com';
 global $tokendata;
 $list = glob('inc/*.php');
 foreach ($list as $file) {
