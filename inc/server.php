@@ -45,10 +45,10 @@ class fileserver {
                 parse_str($request->server['query_string'], $allurl);
                 if ($this->check_sign($downloadhash, $this->secret, $allurl['s'], $allurl['e'])){
                     if(isset($request->header['range'])){
-                        preg_match('/^bytes=(\d+)(?:-(\d+)?)?$/i', $request->header['range'], $matches);
-                        $start_byte = isset($matches[1]) ? intval($matches[1]) : null;
-                        $end_byte = isset($matches[2]) && $matches[2] !== '' ? intval($matches[2]) : null;
-                        if ($end_byte === '-') {
+                        preg_match('/bytes=(\d+)-(\d+)?/', $request->header['range'], $matches);
+                        $start_byte = (int) $matches[1];
+                        $end_byte = isset($matches[2]) ? intval($matches[2]) : null;
+                        if ($end_byte === null) {
                             $end_byte = filesize($this->dir.'/'.substr($downloadhash, 0, 2).'/'.$downloadhash) - 1;
                         }
                         $length = $end_byte - $start_byte + 1;
