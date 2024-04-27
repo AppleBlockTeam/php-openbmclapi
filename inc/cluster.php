@@ -129,6 +129,7 @@ class download {
             mkdir($filePath, 0777, true);
         }
         $savePath = $filePath . $file->hash;
+        $file->path = str_replace(' ', '%20', $file->path);
         $downloader = $client->download($file->path,$DOWNLOAD_DIR.'/'.substr($file->hash, 0, 2).'/'.$file->hash);
         if (!$downloader) {
             mlog("Error connecting to the main control:{$client->errMsg}",2);
