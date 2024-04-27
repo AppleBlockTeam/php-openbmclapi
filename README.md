@@ -8,6 +8,13 @@
 
 ✨ 一个基于PHP以及 [Swoole](https://www.swoole.com/) 的 [OpenBMCLAPI](https://github.com/bangbang93/openbmclapi) 节点端 ✨
 
+<a href="https://gitmoji.dev">
+  <img
+    src="https://img.shields.io/badge/gitmoji-%20😜%20😍-FFDD67.svg?style=flat-square"
+    alt="Gitmoji"
+  />
+</a>
+
 </div>
 
 ## 警告:此版本并不适合在正式环境使用,建议使用其他语言版本节点端
@@ -27,7 +34,7 @@
 1. 克隆此仓库到本地:
 
     ```sh
-    git clone https://github.com/Mxmilu666/php-openbmclapi.git
+    git clone https://github.com/AppleBlockTeam/php-openbmclapi
     cd php-openbmclapi
     ```
 
