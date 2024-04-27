@@ -59,14 +59,30 @@ run(function()use ($config){
     $cluster = new cluster($tokendata['token'],VERSION);
     $files = $cluster->getFileList();
     $FilesCheck = new FilesCheck($files);
-    $Missfile = $FilesCheck->FilesCheckerhash();
+    if ($config['file']['check'] == "hash"){
+        $Missfile = $FilesCheck->FilesCheckerhash();
+    }
+    elseif($config['file']['check'] == "size"){
+        $Missfile = $FilesCheck->FilesCheckersize();
+    }
+    elseif($config['file']['check'] == "exists"){
+        $Missfile = $FilesCheck->FilesCheckerexists();
+    }
     if (is_array($Missfile)){
         mlog("缺失/损坏".count($Missfile)."个文件");
         while(is_array($Missfile)){
             $download = new download($Missfile,$config['advanced']['MaxConcurrent']);
             $download->downloadFiles();
             $FilesCheck = new FilesCheck($Missfile);
-            $Missfile = $FilesCheck->FilesCheckerhash();
+            if ($config['file']['check'] == "hash"){
+                $Missfile = $FilesCheck->FilesCheckerhash();
+            }
+            elseif($config['file']['check'] == "size"){
+                $Missfile = $FilesCheck->FilesCheckersize();
+            }
+            elseif($config['file']['check'] == "exists"){
+                $Missfile = $FilesCheck->FilesCheckerexists();
+            }
             if (is_array($Missfile)){
                 //mlog("缺失/损坏".count($Missfile)."个文件");
             }

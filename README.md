@@ -61,12 +61,12 @@ $config=[
     ],
     "file"=> [
         "cache_dir"=> "./cache",//缓存文件夹
-        "check"=> "hash",//检查文件策略(hash:检查文件hash size:检查文件大小 exists:检查文件是否存在)
+        "check"=> "size",//检查文件策略(hash:检查文件hash size:检查文件大小 exists:检查文件是否存在)
     ],
     "advanced"=> [
         "keepalive"=> 60,//keepalive时间,秒为单位(不建议调整)
         "MaxConcurrent"=> 30,//下载使用的线程
-        "Debug"=> true,//Debug开关
+        "Debug"=> false,//Debug开关
     ],
 ];
 ```

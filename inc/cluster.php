@@ -243,10 +243,10 @@ class FilesCheck {
 
     public function __construct($filesList) {
         $this->filesList = $filesList;
-        mlog("检查策略:hash");
     }
 
     public function FilesCheckerhash() {
+        mlog("检查策略:hash");
         $bar = new CliProgressBar(count($this->filesList));
         $bar->setDetails("[FileCheck]");
         $bar->display();
@@ -282,4 +282,67 @@ class FilesCheck {
         return $this->Missfile;
     }
 
+    public function FilesCheckersize() {
+        mlog("检查策略:size");
+        $bar = new CliProgressBar(count($this->filesList));
+        $bar->setDetails("[FileCheck]");
+        $bar->display();
+        foreach ($this->filesList as $file) {
+            global $shouldExit;
+            global $DOWNLOAD_DIR;
+            if ($shouldExit) {
+                return;
+                break;
+            }
+            if (!file_exists($DOWNLOAD_DIR.'/'.substr($file->hash, 0, 2).'/'.$file->hash)){
+                $this->Missfile[] = new BMCLAPIFile(
+                    $file->path,
+                    $file->hash,
+                    $file->size,
+                    $file->mtime
+                );
+            }
+            else{
+                if (filesize($DOWNLOAD_DIR.'/'.substr($file->hash, 0, 2).'/'.$file->hash) != $file->size) {
+                    $this->Missfile[] = new BMCLAPIFile(
+                        $file->path,
+                        $file->hash,
+                        $file->size,
+                        $file->mtime
+                    );
+                }
+            }
+        $bar->progress();
+        }
+        $bar->display();
+        $bar->end();
+        return $this->Missfile;
+    }
+
+    public function FilesCheckerexists() {
+        mlog("检查策略:exists");
+        $bar = new CliProgressBar(count($this->filesList));
+        $bar->setDetails("[FileCheck]");
+        $bar->display();
+        foreach ($this->filesList as $file) {
+            global $shouldExit;
+            global $DOWNLOAD_DIR;
+            if ($shouldExit) {
+                return;
+                break;
+            }
+            if (!file_exists($DOWNLOAD_DIR.'/'.substr($file->hash, 0, 2).'/'.$file->hash)){
+                $this->Missfile[] = new BMCLAPIFile(
+                    $file->path,
+                    $file->hash,
+                    $file->size,
+                    $file->mtime
+                );
+            }
+        $bar->progress();
+        }
+        $bar->display();
+        $bar->end();
+        return $this->Missfile;
+    }
 }
