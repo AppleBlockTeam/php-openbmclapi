@@ -45,14 +45,14 @@ class fileserver {
                 parse_str($request->server['query_string'], $allurl);
                 $filepath = $this->dir.'/'.substr($downloadhash, 0, 2).'/'.$downloadhash;
                 if ($this->check_sign($downloadhash, $this->secret, $allurl['s'], $allurl['e'])){
-                    if (file_exists($filepath)) {
+                    if (!file_exists($filepath)) {
                         $Missfile[] = new BMCLAPIFile(
                             '/openbmclapi/download/'.$downloadhash,
                             $downloadhash,
                             $downloadhash,
                             $downloadhash
                         );
-                        $download = new download($Missfile,$config['advanced']['MaxConcurrent']);
+                        $download = new download($Missfile);
                         $download->downloadFiles();
                     }
                     if(isset($request->header['range'])){
