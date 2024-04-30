@@ -173,7 +173,7 @@ class socketio {
 
     public function disable() {
         global $enable;
-        if ($enable;){
+        if ($enable){
             $this->ack("disable");
             Coroutine::sleep(2);
         }
