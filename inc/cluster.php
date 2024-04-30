@@ -263,8 +263,11 @@ class download {
             mlog("Error download to the main control:{$client->errMsg}",2);
             return false;
         } 
-        else($client->statusCode == "200"){
+        elseif($client->statusCode == "200"){
             return true;
+        }
+        else{
+            return false;
         }
     }
 }
