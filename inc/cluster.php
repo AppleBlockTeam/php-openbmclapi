@@ -247,7 +247,7 @@ class download {
         if (!file_exists($filePath)) {
             mkdir($filePath, 0777, true);
         }
-        $filepath = "/openbmclapi/download/{$hash}?noopen=1"
+        $filepath = "/openbmclapi/download/{$hash}?noopen=1";
         $client = new Swoole\Coroutine\Http\Client('openbmclapi.bangbang93.com', 443, true);
         $client->set([
             'timeout' => -1
