@@ -4,7 +4,7 @@ use function Swoole\Coroutine\run;
 use function Swoole\Timer;
 declare(ticks=1)
 require './config.php';
-const PHPOBAVERSION = '0.0.1';
+const PHPOBAVERSION = '1.0.0';
 const VERSION = '1.10.4';
 global $DOWNLOAD_DIR;
 $DOWNLOAD_DIR = $config['file']['cache_dir'];
@@ -19,7 +19,7 @@ global $pid;
 $pid = getmypid();
 global $enable;
 $enable = false;
-echo"OpenBmclApionPHP v". PHPOBAVERSION . "-" . VERSION . "-dev" . PHP_EOL;
+echo"OpenBmclApionPHP v". PHPOBAVERSION . "-" . VERSION . PHP_EOL;
 run(function()use ($config){
     //注册信号处理器
     function registerSigintHandler() {

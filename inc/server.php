@@ -66,7 +66,8 @@ class fileserver {
                         }
                         $code = 206;
                         $response->header('Content-Type', 'application/octet-stream');
-                        $response->header('Content-Type', 'application/octet-stream');
+                        $response->header('Content-Disposition', $allurl['name']);
+                        $response->header('x-bmclapi-hash', $downloadhash);
                         $response->sendfile($filepath,$start_byte,$length);
                     }
                     else{
@@ -78,7 +79,8 @@ class fileserver {
                         }
                         $code = 200;
                         $response->header('Content-Type', 'application/octet-stream');
-                        $response->header('Content-Type', 'application/octet-stream');
+                        $response->header('Content-Disposition', $allurl['name']);
+                        $response->header('x-bmclapi-hash', $downloadhash);
                         $response->sendfile($filepath);
                     }
                 }
