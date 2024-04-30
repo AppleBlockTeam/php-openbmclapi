@@ -43,16 +43,27 @@ class fileserver {
             $downloadhash = str_replace('/download/', '', $request->server['request_uri']);
             if(isset($request->server['query_string'])){
                 parse_str($request->server['query_string'], $allurl);
+                $filepath = $this->dir.'/'.substr($downloadhash, 0, 2).'/'.$downloadhash;
                 if ($this->check_sign($downloadhash, $this->secret, $allurl['s'], $allurl['e'])){
+                    if (file_exists($filepath)) {
+                        $Missfile[] = new BMCLAPIFile(
+                            '/openbmclapi/download/'.$downloadhash,
+                            $downloadhash,
+                            $downloadhash,
+                            $downloadhash
+                        );
+                        $download = new download($Missfile,$config['advanced']['MaxConcurrent']);
+                        $download->downloadFiles();
+                    }
                     if(isset($request->header['range'])){
                         preg_match('/bytes=(\d+)-(\d+)?/', $request->header['range'], $matches);
                         $start_byte = (int) $matches[1];
                         $end_byte = isset($matches[2]) ? intval($matches[2]) : null;
                         if ($end_byte === null) {
-                            $end_byte = filesize($this->dir.'/'.substr($downloadhash, 0, 2).'/'.$downloadhash) - 1;
+                            $end_byte = filesize($filepath) - 1;
                         }
                         $length = $end_byte - $start_byte + 1;
-                        $fileSize = filesize($this->dir.'/'.substr($downloadhash, 0, 2).'/'.$downloadhash);
+                        $fileSize = filesize($filepath);
                         global $enable;
                         if ($enable){
                             global $kacounters;
@@ -61,18 +72,18 @@ class fileserver {
                         }
                         $code = 206;
                         $response->header('Content-Type', 'application/octet-stream');
-                        $response->sendfile($this->dir.'/'.substr($downloadhash, 0, 2).'/'.$downloadhash,$start_byte,$length);
+                        $response->sendfile($filepath,$start_byte,$length);
                     }
                     else{
                         global $enable;
                         if ($enable){
                             global $kacounters;
                             $kacounters->incr('1','hits');
-                            $kacounters->incr('1','bytes',filesize($this->dir.'/'.substr($downloadhash, 0, 2).'/'.$downloadhash));
+                            $kacounters->incr('1','bytes',filesize($filepath));
                         }
                         $code = 200;
                         $response->header('Content-Type', 'application/octet-stream');
-                        $response->sendfile($this->dir.'/'.substr($downloadhash, 0, 2).'/'.$downloadhash);
+                        $response->sendfile($filepath);
                     }
                 }
                 else{

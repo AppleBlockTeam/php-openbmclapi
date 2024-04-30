@@ -77,7 +77,7 @@ class socketio {
                 }
                 elseif (isset($jsondata[0][1]) && $this->IsTime($jsondata[0][1])){
                     global $kadata;
-                    mlog("Keep-alive success: hits={$kadata['hits']} bytes={$kadata['bytes']} Time={$jsondata[0][1]}");
+                    mlog(" Keep-alive success: hits={$kadata['hits']} bytes={$kadata['bytes']} Time={$jsondata[0][1]}");
                 }
                 elseif (isset($jsondata[0][0]["message"])){
                     mlog("[socket.io]Got data {$jsondata[0][0]["message"]}");
@@ -98,8 +98,7 @@ class socketio {
         global $httpserver;
             if ($shouldExit) {
                 Swoole\Timer::clear($katimeid);
-                mlog("[socket.io]Close Connection");
-                $client->close();
+                $this->disable();
                 $httpserver->stopserver();
                 return;
             }
@@ -170,5 +169,12 @@ class socketio {
     public function IsTime($inputString) {
         $pattern = '/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/';
         return preg_match($pattern, $inputString) === 1;
+    }
+
+    public function disable() {
+        $this->ack("disable");
+        Coroutine::sleep(2);
+        mlog("[socket.io]Close Connection");
+        $client->close();
     }
 }

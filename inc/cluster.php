@@ -116,7 +116,7 @@ class download {
     private $maxConcurrent;
     private $semaphore;
 
-    public function __construct($filesList, $maxConcurrent) {
+    public function __construct($filesList, $maxConcurrent = 1) {
         $this->filesList = $filesList;
         $this->maxConcurrent = $maxConcurrent;
         $this->semaphore = new Swoole\Coroutine\Channel($maxConcurrent);
@@ -225,6 +225,9 @@ class download {
                     'Accept' => '*/*',
                 ]);
                 if ($this->downloader($client, $file,$bar)) {
+                    $client->close();
+                }
+                else{
                     $client->close();
                 }
                 $this->semaphore->pop();
