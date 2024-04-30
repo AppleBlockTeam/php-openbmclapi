@@ -172,9 +172,12 @@ class socketio {
     }
 
     public function disable() {
-        $this->ack("disable");
-        Coroutine::sleep(2);
+        global $enable;
+        if ($enable;){
+            $this->ack("disable");
+            Coroutine::sleep(2);
+        }
         mlog("[socket.io]Close Connection");
-        $client->close();
+        $this->$client->close();
     }
 }

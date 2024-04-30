@@ -116,7 +116,7 @@ class download {
     private $maxConcurrent;
     private $semaphore;
 
-    public function __construct($filesList, $maxConcurrent = 1) {
+    public function __construct($filesList = [], $maxConcurrent = 1) {
         $this->filesList = $filesList;
         $this->maxConcurrent = $maxConcurrent;
         $this->semaphore = new Swoole\Coroutine\Channel($maxConcurrent);
@@ -238,6 +238,34 @@ class download {
         }
         $bar->display();
         $bar->end();
+    }
+
+    private function downloadnopoen($hash) {
+        global $DOWNLOAD_DIR;
+        global $tokendata;
+        $filePath = $DOWNLOAD_DIR . '/' . substr($hash, 0, 2) . '/';
+        if (!file_exists($filePath)) {
+            mkdir($filePath, 0777, true);
+        }
+        $filepath = "/openbmclapi/download/{$hash}?noopen=1"
+        $client = new Swoole\Coroutine\Http\Client('openbmclapi.bangbang93.com', 443, true);
+        $client->set([
+            'timeout' => -1
+        ]);
+        $client->setHeaders([
+            'Host' => 'openbmclapi.bangbang93.com',
+            'User-Agent' => USERAGENT,
+            'Accept' => '*/*',
+            'Authorization' => "Bearer {$tokendata['token']}"
+        ]);
+        $downloader = $client->download($filepath,$DOWNLOAD_DIR.'/'.substr($hash, 0, 2).'/'.$hash);
+        if (!$downloader) {
+            mlog("Error download to the main control:{$client->errMsg}",2);
+            return false;
+        } 
+        else($client->statusCode == "200"){
+            return true;
+        }
     }
 }
 

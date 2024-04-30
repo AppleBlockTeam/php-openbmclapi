@@ -46,14 +46,8 @@ class fileserver {
                 $filepath = $this->dir.'/'.substr($downloadhash, 0, 2).'/'.$downloadhash;
                 if ($this->check_sign($downloadhash, $this->secret, $allurl['s'], $allurl['e'])){
                     if (!file_exists($filepath)) {
-                        $Missfile[] = new BMCLAPIFile(
-                            '/openbmclapi/download/'.$downloadhash,
-                            $downloadhash,
-                            $downloadhash,
-                            $downloadhash
-                        );
-                        $download = new download($Missfile);
-                        $download->downloadFiles();
+                        $download = new download();
+                        $download->downloadnopoen($downloadhash);
                     }
                     if(isset($request->header['range'])){
                         preg_match('/bytes=(\d+)-(\d+)?/', $request->header['range'], $matches);
@@ -72,6 +66,7 @@ class fileserver {
                         }
                         $code = 206;
                         $response->header('Content-Type', 'application/octet-stream');
+                        $response->header('Content-Type', 'application/octet-stream');
                         $response->sendfile($filepath,$start_byte,$length);
                     }
                     else{
@@ -82,6 +77,7 @@ class fileserver {
                             $kacounters->incr('1','bytes',filesize($filepath));
                         }
                         $code = 200;
+                        $response->header('Content-Type', 'application/octet-stream');
                         $response->header('Content-Type', 'application/octet-stream');
                         $response->sendfile($filepath);
                     }
