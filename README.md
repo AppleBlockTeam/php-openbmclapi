@@ -80,12 +80,13 @@ $config=[
 
 ## 📍 Todo
 - [x] 可以正常上线使用(主要)
+- [ ] 完善Log系统
 - [ ] 添加注释
-- [ ] Web界面
-- [ ] 统一的管理API
-- [ ] 插件系统
+- [ ] Web仪表盘
 
-## 🔖 版本号
+## ❓ FAQ
+
+### 🔖 版本号
 PHPOpenBmclApi 采用独立版本号+官方版本号的形式
 
 如:v**0.0.1**-**1.10.3**-**dev**
@@ -95,8 +96,13 @@ PHPOpenBmclApi 采用独立版本号+官方版本号的形式
 | 名称 | **版本号** | **兼容版本号** | **版本说明** |
 | 解释 | 表示PHPOpenBmclApi的独立版本号 | 表示该版本等效于 [OpenBMCLAPI](https://github.com/bangbang93/openbmclapi) 的哪个版本 | 如dev是开发版,发布版不会有版本说明 |
 
+### 🎉 贡献说明
+如果你想为本项目做出贡献，请遵守以下规则：
+* 所有请求请提交到dev分支，提交到main分支将会被关闭
+* 每条 commit 请认真填写信息，最好使用[gitmoji](https://gitmoji.dev)规范
+
 ## 📖 许可证
-项目采用`Apache-2.0 license`协议开源
+项目采用 `Apache-2.0 license` 协议开源
 
 ## 🫂 鸣谢
 
