@@ -75,6 +75,11 @@ class socketio {
                         $this->keepalive($kacounters);
                     });
                 }
+                elseif (isset($jsondata[0][1]) && $jsondata[0][1] == "0"){
+                    mlog("[socket.io]主控返回节点已掉线");
+                    global $pid;
+                    posix_kill($pid, SIGINT);
+                }
                 elseif (isset($jsondata[0][1]) && $this->IsTime($jsondata[0][1])){
                     global $kadata;
                     mlog(" Keep-alive success: hits={$kadata['hits']} bytes={$kadata['bytes']} Time={$jsondata[0][1]}");
