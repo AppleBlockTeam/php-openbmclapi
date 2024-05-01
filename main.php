@@ -4,7 +4,7 @@ use function Swoole\Coroutine\run;
 use function Swoole\Timer;
 declare(ticks=1)
 require './config.php';
-const PHPOBAVERSION = '1.0.0';
+const PHPOBAVERSION = '1.1.0';
 const VERSION = '1.10.4';
 global $DOWNLOAD_DIR;
 $DOWNLOAD_DIR = $config['file']['cache_dir'];
