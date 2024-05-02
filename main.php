@@ -10,7 +10,6 @@ global $DOWNLOAD_DIR;
 $DOWNLOAD_DIR = $config['file']['cache_dir'];
 const USERAGENT = 'openbmclapi-cluster/' . VERSION . '  ' . 'PHP-OpenBmclApi/'.PHPOBAVERSION;
 const OPENBMCLAPIURL = 'openbmclapi.bangbang93.com';
-global $tokendata;
 $list = glob('inc/*.php');
 foreach ($list as $file) {
     require $file;
@@ -51,7 +50,6 @@ run(function()use ($config){
         $tokendata = $token->gettoken();
         mlog("GetNewToken:".$tokendata['token'],1);
     });
-    global $socketio;
     registerSigintHandler();
     mlog("Timer start on ID{$tokentimeid}",1);
     
@@ -133,7 +131,6 @@ run(function()use ($config){
             fclose($cert);
         }
         global $httpserver;
-        global $DOWNLOAD_DIR;
         $httpserver = new fileserver($config['cluster']['host'],$config['cluster']['port'],$config['cluster']['CLUSTER_ID'].'.crt',$config['cluster']['CLUSTER_ID'].'.key',$config['cluster']['CLUSTER_SECRET']);
         Coroutine::create(function () use ($config,$httpserver){
             $httpserver->startserver();
