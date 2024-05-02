@@ -70,7 +70,7 @@ class fileserver {
                             $response->header('Content-Disposition', $allurl['name']);
                         }
                         $response->header('x-bmclapi-hash', $downloadhash);
-                        $result = $response->sendfile($filepath,$start_byte,$length);
+                        $response->sendfile($filepath,$start_byte,$length);
                     }
                     else{
                         global $enable;
@@ -85,21 +85,21 @@ class fileserver {
                             $response->header('Content-Disposition', $allurl['name']);
                         }
                         $response->header('x-bmclapi-hash', $downloadhash);
-                        $result = $response->sendfile($filepath);
+                        $response->sendfile($filepath);
                     }
                 }
                 else{
                     $code = 403;
                     $response->status($code);
                     $response->header('Content-Type', 'text/html; charset=utf-8');
-                    $result = $response->end("<title>Error</title><pre>invalid sign</pre>");
+                    $response->end("<title>Error</title><pre>invalid sign</pre>");
                 }
                 }
                 else{
                     $code = 404;
                     $response->status($code);
                     $response->header('Content-Type', 'text/html; charset=utf-8');
-                    $result = $response->end("<title>Error</title><pre>404 Not Found</pre>");
+                    $response->end("<title>Error</title><pre>404 Not Found</pre>");
                 }
             if(!isset($request->server['query_string'])){
                 $url = $request->server['request_uri'];
@@ -107,12 +107,7 @@ class fileserver {
             else{
                 $url = $request->server['request_uri']."?".$request->server['query_string'];
             }
-            if($result){
-                mlog(" Serve {$code} | {$request->server['remote_addr']} | {$request->server['server_protocol']} | {$url} | {$request->header['user-agent']};") ;
-            }
-            else{
-                mlog("HttpServer Error!",2) ;
-            }
+            mlog(" Serve {$code} | {$request->server['remote_addr']} | {$request->server['server_protocol']} | {$url} | {$request->header['user-agent']};") ;
         });
         $server->handle('/measure', function ($request, $response) {
             $measuresize = str_replace('/measure/', '', $request->server['request_uri']);
