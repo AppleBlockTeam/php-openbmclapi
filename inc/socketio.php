@@ -183,6 +183,6 @@ class socketio {
             Coroutine::sleep(2);
         }
         mlog("[socket.io]Close Connection");
-        $this->$client->close();
+        $this->client->close();
     }
 }
