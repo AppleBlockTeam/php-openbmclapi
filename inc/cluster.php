@@ -135,7 +135,7 @@ class download {
             mlog("Error connecting to the main control:{$client->errMsg}",2);
             return false;
         } 
-        elseif($client->statusCode == "200"){
+        elseif($client->statusCode == 200){
             $bar->progress();
             return true;
         }
@@ -173,7 +173,7 @@ class download {
                 }
                 if (!$downloader) {
                     echo PHP_EOL;
-                    mlog("{$file->path} Download Failed: {$client->errMsg} From Node: {$location_url['host']}:{$location_url['port']}",2);
+                    mlog("{$file->path} Download Failed: {$client->errMsg} | {$location_url['host']}:{$location_url['port']}",2);
                     $bar->progress();
                     return false;
                 }
@@ -186,7 +186,13 @@ class download {
             else{
                 if (!$downloader) {
                     echo PHP_EOL;
-                    mlog("{$file->path} Download Failed: {$client->errMsg} From Node: {$location_url['host']}:{$location_url['port']}",2);
+                    mlog("{$file->path} Download Failed: {$client->errMsg} | {$location_url['host']}:{$location_url['port']}",2);
+                    $bar->progress();
+                    return false;
+                }
+                elseif($client->statusCode >= 400){
+                    echo PHP_EOL;
+                    mlog("Download Failed:{$client->statusCode} | {$file->path} | {$location_url['host']}:{$location_url['port']}",2);
                     $bar->progress();
                     return false;
                 }

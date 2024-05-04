@@ -22,7 +22,7 @@ echo"OpenBmclApionPHP v". PHPOBAVERSION . "-" . VERSION . PHP_EOL;
 run(function()use ($config){
     //注册信号处理器
     function registerSigintHandler() {
-        global $tokentimerid;
+         global $tokentimerid;
         $shouldExit = false; // 初始化为false
         Swoole\Process::signal(SIGINT, function ($signo) use ($tokentimerid) {
             try {
