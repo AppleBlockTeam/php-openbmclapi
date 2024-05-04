@@ -22,13 +22,13 @@ echo"OpenBmclApionPHP v". PHPOBAVERSION . "-" . VERSION . PHP_EOL;
 run(function()use ($config){
     //注册信号处理器
     function registerSigintHandler() {
-        global $tokentimeid;
+         global $tokentimerid;
         $shouldExit = false; // 初始化为false
-        Swoole\Process::signal(SIGINT, function ($signo) use ($tokentimeid) {
+        Swoole\Process::signal(SIGINT, function ($signo) use ($tokentimerid) {
             try {
                 global $shouldExit;
                 $shouldExit = true; // 设置退出标志
-                Swoole\Timer::clear($tokentimeid);
+                Swoole\Timer::clear($tokentimerid);
                 echo PHP_EOL;
                 mlog("正在退出...");
                 exit();
@@ -45,13 +45,13 @@ run(function()use ($config){
     mlog("GetToken:".$tokendata['token'],1);
     mlog("TokenTTL:".$tokendata['upttl'],1);
     //启动更新TokenTimer
-    global $tokentimeid;
-    $tokentimeid = Swoole\Timer::tick($tokendata['upttl'], function () use ($token) {
+    global $tokentimerid;
+    $tokentimerid = Swoole\Timer::tick($tokendata['upttl'], function () use ($token) {
         $tokendata = $token->gettoken();
         mlog("GetNewToken:".$tokendata['token'],1);
     });
     registerSigintHandler();
-    mlog("Timer start on ID{$tokentimeid}",1);
+    mlog("Timer start on ID{$tokentimerid}",1);
     
     //下载文件列表
     $cluster = new cluster($tokendata['token'],VERSION);
