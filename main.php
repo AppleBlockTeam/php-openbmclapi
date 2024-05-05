@@ -4,7 +4,7 @@ use function Swoole\Coroutine\run;
 use function Swoole\Timer;
 declare(ticks=1)
 require './config.php';
-const PHPOBAVERSION = '1.2.0';
+const PHPOBAVERSION = '1.3.0';
 const VERSION = '1.10.4';
 global $DOWNLOAD_DIR;
 $DOWNLOAD_DIR = $config['file']['cache_dir'];
@@ -135,6 +135,6 @@ run(function()use ($config){
         Coroutine::create(function () use ($config,$httpserver){
             $httpserver->startserver();
         });
-        $socketio->enable($config['cluster']['public_host'],$config['cluster']['public_port']);
+        $socketio->enable($config['cluster']['public_host'],$config['cluster']['public_port'],$config['cluster']['byoc']);
     }
 });
