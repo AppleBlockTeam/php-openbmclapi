@@ -6,8 +6,8 @@ declare(ticks=1)
 set_time_limit(0);
 ini_set('memory_limit', '-1');
 require './config.php';
-const PHPOBAVERSION = '1.3.0';
-const VERSION = '1.10.4';
+const PHPOBAVERSION = '1.4.0';
+const VERSION = '1.10.5';
 global $DOWNLOAD_DIR;
 $DOWNLOAD_DIR = $config['file']['cache_dir'];
 const USERAGENT = 'openbmclapi-cluster/' . VERSION . '  ' . 'PHP-OpenBmclApi/'.PHPOBAVERSION;
