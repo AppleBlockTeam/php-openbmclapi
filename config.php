@@ -7,6 +7,7 @@ $config=[
         "public_port"=> 4000,//服务端口
         "CLUSTER_ID"=> "",
         "CLUSTER_SECRET"=> "",
+        "byoc"=>false,
     ],
     "file"=> [
         "cache_dir"=> "./cache",//缓存文件夹

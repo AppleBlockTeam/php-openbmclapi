@@ -142,7 +142,7 @@ class socketio {
     public function Getclient() {
         return $this->client;
     }
-    public function enable($host,$port) {
+    public function enable($host,$port,$byoc) {
         if (in_array($host, ["0.0.0.0", "127.0.0.1"])){
             $host = preg_replace('/\R/', '', file_get_contents('http://ip.3322.net'));
         }
@@ -151,7 +151,7 @@ class socketio {
             'host' => $host,
             'port' => $port,
             'version' => VERSION,
-            'byoc' => false,
+            'byoc' => $byoc,
             'noFastEnable' => false,
             'flavor' =>[
                 'runtime' => 'PHP-'.substr(PHP_VERSION,0,3).'/'.php_uname('s'),

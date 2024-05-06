@@ -3,6 +3,8 @@ use Swoole\Coroutine;
 use function Swoole\Coroutine\run;
 use function Swoole\Timer;
 declare(ticks=1)
+set_time_limit(0);
+ini_set('memory_limit', '-1');
 require './config.php';
 const PHPOBAVERSION = '1.3.0';
 const VERSION = '1.10.4';
@@ -135,6 +137,6 @@ run(function()use ($config){
         Coroutine::create(function () use ($config,$httpserver){
             $httpserver->startserver();
         });
-        $socketio->enable($config['cluster']['public_host'],$config['cluster']['public_port']);
+        $socketio->enable($config['cluster']['public_host'],$config['cluster']['public_port'],$config['cluster']['byoc']);
     }
 });
