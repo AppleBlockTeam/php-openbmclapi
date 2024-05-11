@@ -26,7 +26,7 @@ class socketio {
         }
 
         while(true) {
-            $alldata = $client->recv(1.5);
+            $alldata = $client->recv();
             if (!is_bool($alldata)){
             $this->data = $data = $alldata->data;
             preg_match('/^\d+/', $data, $code);
@@ -97,7 +97,6 @@ class socketio {
                 mlog("[socket.io]Got data {$data}");
             }
             //var_dump($data);
-            Coroutine::sleep(0.1);
         }
         global $shouldExit;
         global $httpserver;
