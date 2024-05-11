@@ -246,7 +246,7 @@ class download {
         $bar->end();
     }
 
-    private function downloadnopoen($hash) {
+    public function downloadnopoen($hash) {
         global $DOWNLOAD_DIR;
         global $tokendata;
         $filePath = $DOWNLOAD_DIR . '/' . substr($hash, 0, 2) . '/';
