@@ -130,7 +130,7 @@ class socketio {
             Swoole\Coroutine\System::sleep(1);
             $time++;
         }
-        if ($time = 30){
+        if ($time == 30){
             mlog("Getcert Connected Overtime",2);
             return(false);
         }
@@ -146,7 +146,7 @@ class socketio {
                 return($this->client->push('420'.$senddata));
             }
         }
-        if ($time = 30){
+        if ($time == 30){
             mlog("[socket.io]ACK Connected Overtime",2);
             return(false);
         }
