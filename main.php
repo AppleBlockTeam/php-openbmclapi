@@ -7,7 +7,7 @@ date_default_timezone_set('Asia/Shanghai');
 set_time_limit(0);
 ini_set('memory_limit', '-1');
 require './config.php';
-const PHPOBAVERSION = '1.4.0';
+const PHPOBAVERSION = '1.5.0';
 const VERSION = '1.10.5';
 global $DOWNLOAD_DIR;
 $DOWNLOAD_DIR = $config['file']['cache_dir'];
