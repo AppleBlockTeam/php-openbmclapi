@@ -102,7 +102,7 @@ PHPOpenBmclApi 采用独立版本号+官方版本号的形式
 ### 🎉 贡献说明
 如果你想为本项目做出贡献，请遵守以下规则：
 * 所有请求请提交到dev分支，提交到main分支将会被关闭
-* 每条 commit 请认真填写信息，最好使用[gitmoji](https://gitmoji.dev)规范
+* 每条 commit 请认真填写信息，最好使用 [gitmoji](https://gitmoji.dev) 规范
 
 ### ❔️ 常见问题
 1. 为什么我到1000左右连接数就无法继续提供服务？
@@ -111,7 +111,7 @@ PHPOpenBmclApi 采用独立版本号+官方版本号的形式
 2. 我不想安装PHP环境怎么办？
 * 你可以使用 [static-php-cli](https://github.com/crazywhalecc/static-php-cli) 或者等我打包出 phar 文件后封装成二进制程序（TODO）
 
-3. 为什么不支持多Webdav/存储？
+3. 为什么不支持多 Webdav /存储？
 * 因为我跟随 Node 版，以 Node 版为规范，并且 BangBang93 一向反对单节点多存储，所以不考虑支持
 
 4. 为什么会出现一些奇奇怪怪的故障？
