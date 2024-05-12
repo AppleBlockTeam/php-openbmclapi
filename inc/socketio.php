@@ -26,7 +26,7 @@ class socketio {
         }
 
         while(true) {
-            $alldata = $client->recv(1.5);
+            $alldata = $client->recv(1);
             if (!is_bool($alldata)){
             $this->data = $data = $alldata->data;
             preg_match('/^\d+/', $data, $code);
@@ -76,7 +76,7 @@ class socketio {
                     });
                 }
                 elseif (isset($jsondata[0][1]) && $jsondata[0][1] == "0"){
-                    mlog("[socket.io]主控返回节点已掉线");
+                    mlog("[socket.io]节点已掉线");
                     global $pid;
                     posix_kill($pid, SIGINT);
                 }
@@ -86,6 +86,11 @@ class socketio {
                 }
                 elseif (isset($jsondata[0][0]["message"])){
                     mlog("[socket.io]Got data {$jsondata[0][0]["message"]}");
+                    if (strpos($jsondata[0][0]["message"], "Error") !== false) {
+                        mlog("[socket.io]节点启用失败");
+                        global $pid;
+                        posix_kill($pid, SIGINT);
+                    }
                 }
                 else {
                    mlog("[socket.io]Got data {$data}");
@@ -94,15 +99,22 @@ class socketio {
             }
             if ($code[0] == '423'){
                 $data = substr($data, strlen($code[0]));
-                mlog("[socket.io]Got data {$data}");
+                if(isset($jsondata[0][0]["message"])){
+                    mlog("[socket.io]Got data {$jsondata[0][0]["message"]}");
+                }
+                else{
+                    mlog("[socket.io]Got data {$data}");
+                }
             }
             //var_dump($data);
-            Coroutine::sleep(0.1);
         }
         global $shouldExit;
         global $httpserver;
             if ($shouldExit) {
-                Swoole\Timer::clear($katimeid);
+                global $enable;
+                if($enable){
+                    Swoole\Timer::clear($katimeid);
+                }
                 $this->disable();
                 $httpserver->stopserver();
                 return;

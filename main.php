@@ -3,6 +3,7 @@ use Swoole\Coroutine;
 use function Swoole\Coroutine\run;
 use function Swoole\Timer;
 declare(ticks=1)
+date_default_timezone_set('Asia/Shanghai');
 set_time_limit(0);
 ini_set('memory_limit', '-1');
 require './config.php';
