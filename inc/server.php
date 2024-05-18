@@ -25,6 +25,7 @@ class fileserver {
             'ssl_cert_file' => './cert/'.$this->cert,
             'ssl_key_file' => './cert/'.$this->key,
             'open_http2_protocol' => true,
+            'max_connection' => 10000,
         ]);
         $server->handle('/', function ($request, $response) {
             $code = 404;
@@ -67,7 +68,7 @@ class fileserver {
                         $code = 206;
                         $response->header('Content-Type', 'application/octet-stream');
                         if(isset($request->header['name'])){
-                            $response->header('Content-Disposition', $allurl['name']);
+                             $response->header('Content-Disposition', 'attachment; filename='.$allurl['name']);
                         }
                         $response->header('x-bmclapi-hash', $downloadhash);
                         $response->sendfile($filepath,$start_byte,$length);
@@ -82,7 +83,7 @@ class fileserver {
                         $code = 200;
                         $response->header('Content-Type', 'application/octet-stream');
                         if(isset($request->header['name'])){
-                            $response->header('Content-Disposition', $allurl['name']);
+                            $response->header('Content-Disposition', 'attachment; filename='.$allurl['name']);
                         }
                         $response->header('x-bmclapi-hash', $downloadhash);
                         $response->sendfile($filepath);

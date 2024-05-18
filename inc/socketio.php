@@ -50,8 +50,7 @@ class socketio {
             }
             if ($code[0] == '41'){
                 mlog("[socket.io]Close Connection");
-                global $pid;
-                posix_kill($pid, SIGINT);
+                exits();
                 $client->close();
                 return;
             }
@@ -77,8 +76,7 @@ class socketio {
                 }
                 elseif (isset($jsondata[0][1]) && $jsondata[0][1] == "0"){
                     mlog("[socket.io]节点已掉线");
-                    global $pid;
-                    posix_kill($pid, SIGINT);
+                    exits();
                 }
                 elseif (isset($jsondata[0][1]) && $this->IsTime($jsondata[0][1])){
                     global $kadata;
@@ -88,8 +86,7 @@ class socketio {
                     mlog("[socket.io]Got data {$jsondata[0][0]["message"]}");
                     if (strpos($jsondata[0][0]["message"], "Error") !== false) {
                         mlog("[socket.io]节点启用失败");
-                        global $pid;
-                        posix_kill($pid, SIGINT);
+                        exits();
                     }
                 }
                 else {
@@ -130,7 +127,7 @@ class socketio {
             Swoole\Coroutine\System::sleep(1);
             $time++;
         }
-        if ($time = 30){
+        if ($time == 30){
             mlog("Getcert Connected Overtime",2);
             return(false);
         }
@@ -146,7 +143,7 @@ class socketio {
                 return($this->client->push('420'.$senddata));
             }
         }
-        if ($time = 30){
+        if ($time == 30){
             mlog("[socket.io]ACK Connected Overtime",2);
             return(false);
         }

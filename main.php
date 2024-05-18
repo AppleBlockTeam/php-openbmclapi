@@ -21,23 +21,19 @@ global $enable;
 $enable = false;
 echo"OpenBmclApionPHP v". PHPOBAVERSION . "-" . VERSION . PHP_EOL;
 run(function()use ($config){
-    //注册信号处理器
+    //注册信号处理器、
+    function exits() {
+        global $shouldExit;
+        global $tokentimerid;
+        $shouldExit = true; // 设置退出标志
+        Swoole\Timer::clear($tokentimerid);
+        echo PHP_EOL;
+        mlog("正在退出...");
+    }
     function registerSigintHandler() {
-         global $tokentimerid;
         $shouldExit = false; // 初始化为false
-        Swoole\Process::signal(SIGINT, function ($signo) use ($tokentimerid) {
-            try {
-                global $shouldExit;
-                $shouldExit = true; // 设置退出标志
-                Swoole\Timer::clear($tokentimerid);
-                echo PHP_EOL;
-                mlog("正在退出...");
-                exit();
-            } catch (\Swoole\ExitException $e) {
-                //var_dump($e->getMessage());
-                //var_dump($e->getStatus() === 1);
-                //var_dump($e->getFlags() === SWOOLE_EXIT_IN_COROUTINE);
-            }
+        Swoole\Process::signal(SIGINT, function ($signo){
+            exits();
         });
     }
     //获取初次Token
