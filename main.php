@@ -6,7 +6,7 @@ declare(ticks=1)
 date_default_timezone_set('Asia/Shanghai');
 require './config.php';
 const PHPOBAVERSION = '1.5.0';
-const VERSION = '1.10.4';
+const VERSION = '1.10.5';
 global $DOWNLOAD_DIR;
 $DOWNLOAD_DIR = $config['file']['cache_dir'];
 const USERAGENT = 'openbmclapi-cluster/' . VERSION . '  ' . 'PHP-OpenBmclApi/'.PHPOBAVERSION;

@@ -1,23 +1,22 @@
 <div align="center">
 
-<picture>
-  <img alt="logo" src="https://img.picgo.net/2024/04/04/logobg-2b73c6d349a3ad9f7.png">
-</picture>
+![](https://img.picgo.net/2024/04/04/logobg-2b73c6d349a3ad9f7.png)
 
 # OpenBMCLAPI for PHP
 
 ✨ 一个基于PHP以及 [Swoole](https://www.swoole.com/) 的 [OpenBMCLAPI](https://github.com/bangbang93/openbmclapi) 节点端 ✨
 
-<a href="https://gitmoji.dev">
-  <img
-    src="https://img.shields.io/badge/gitmoji-%20😜%20😍-FFDD67.svg?style=flat-square"
-    alt="Gitmoji"
-  />
-</a>
+![PHP](https://img.shields.io/badge/PHP-%3E=8.0.0-blue?logo=PHP&style=flat-square)
+![Swoole](https://img.shields.io/badge/Swoole-%3E=5.1.0-blue?style=flat-square)
+![gitmoji](https://img.shields.io/badge/gitmoji-%20😜%20😍-FFDD67.svg?style=flat-square)
+
+
+![GitHub top language](https://img.shields.io/github/languages/top/AppleBlockTeam/php-openbmclapi?style=flat-square)
+![GitHub License](https://img.shields.io/github/license/AppleBlockTeam/php-openbmclapi?style=flat-square)
+![GitHub Release](https://img.shields.io/github/v/release/AppleBlockTeam/php-openbmclapi?style=flat-square)
+![GitHub Repo stars](https://img.shields.io/github/stars/AppleBlockTeam/php-openbmclapi?style=flat-square)
 
 </div>
-
-## 警告:此版本并不适合在正式环境使用,建议使用其他语言版本节点端
 
 ## ⚙️ 部署
 
@@ -25,9 +24,11 @@
 
 #### 环境要求
 
-  建议 PHP 版本 >= 8.0.0
+  PHP 版本 >= 8.0.0
+
+  [Swoole](https://www.swoole.com/) 版本 >= 5.1.
   
-  以及对应版本的 [Swoole](https://www.swoole.com/) 和 [Zstd](https://github.com/kjdev/php-ext-zstd) 扩展库
+  以及对应版本的 [Zstd](https://github.com/kjdev/php-ext-zstd)
 
 #### 开始部署
 
@@ -65,6 +66,7 @@ $config=[
         "public_port"=> 4000,//服务端口
         "CLUSTER_ID"=> "",
         "CLUSTER_SECRET"=> "",
+        "byoc"=>false,
     ],
     "file"=> [
         "cache_dir"=> "./cache",//缓存文件夹
@@ -79,10 +81,12 @@ $config=[
 ```
 
 ## 📍 Todo
-- [x] 可以正常上线使用(主要)
+- [ ] Web仪表盘(主要)
+- [ ] 支持WebDAV
+- [ ] 打包二进制文件
 - [ ] 完善Log系统
 - [ ] 添加注释
-- [ ] Web仪表盘
+- [x] 可以正常上线使用
 
 ## ❓ FAQ
 
@@ -99,7 +103,20 @@ PHPOpenBmclApi 采用独立版本号+官方版本号的形式
 ### 🎉 贡献说明
 如果你想为本项目做出贡献，请遵守以下规则：
 * 所有请求请提交到dev分支，提交到main分支将会被关闭
-* 每条 commit 请认真填写信息，最好使用[gitmoji](https://gitmoji.dev)规范
+* 每条 commit 请认真填写信息，最好使用 [gitmoji](https://gitmoji.dev) 规范
+
+### ❔️ 常见问题
+1. 为什么我到1000左右连接数就无法继续提供服务？
+* Swoole默认Http服务器连接数是根据 `ulimit -n` 来设定的，如果连接数过小建议自行调整 ulimit
+
+2. 我不想安装PHP环境怎么办？
+* 你可以使用 [static-php-cli](https://github.com/crazywhalecc/static-php-cli) 或者等我打包出 phar 文件后封装成二进制程序（TODO）
+
+3. 为什么不支持多 Webdav /存储？
+* 因为我跟随 Node 版，以 Node 版为规范，并且 BangBang93 一向反对单节点多存储，所以不考虑支持
+
+4. 为什么会出现一些奇奇怪怪的故障？
+* 请提交 issues 进一步解决
 
 ## 📖 许可证
 项目采用 `Apache-2.0 license` 协议开源
