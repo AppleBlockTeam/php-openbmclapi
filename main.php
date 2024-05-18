@@ -5,12 +5,12 @@ use function Swoole\Timer;
 declare(ticks=1)
 date_default_timezone_set('Asia/Shanghai');
 require './config.php';
-const PHPOBAVERSION = '1.3.0';
+const PHPOBAVERSION = '1.5.0';
 const VERSION = '1.10.4';
 global $DOWNLOAD_DIR;
 $DOWNLOAD_DIR = $config['file']['cache_dir'];
 const USERAGENT = 'openbmclapi-cluster/' . VERSION . '  ' . 'PHP-OpenBmclApi/'.PHPOBAVERSION;
-const OPENBMCLAPIURL = 'openbmclapi.staging.bangbang93.com';
+const OPENBMCLAPIURL = 'openbmclapi.bangbang93.com';
 $list = glob('inc/*.php');
 foreach ($list as $file) {
     require $file;
