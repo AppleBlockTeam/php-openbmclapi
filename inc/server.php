@@ -25,6 +25,7 @@ class fileserver {
             'ssl_cert_file' => './cert/'.$this->cert,
             'ssl_key_file' => './cert/'.$this->key,
             'open_http2_protocol' => true,
+            'max_connection' => 10000,
         ]);
         $server->handle('/', function ($request, $response) {
             $code = 404;
@@ -67,7 +68,7 @@ class fileserver {
                         $code = 206;
                         $response->header('Content-Type', 'application/octet-stream');
                         if(isset($request->header['name'])){
-                            $response->header('Content-Disposition', $allurl['name']);
+                             $response->header('Content-Disposition', 'attachment; filename='.$allurl['name']);
                         }
                         $response->header('x-bmclapi-hash', $downloadhash);
                         $response->sendfile($filepath,$start_byte,$length);
@@ -82,7 +83,7 @@ class fileserver {
                         $code = 200;
                         $response->header('Content-Type', 'application/octet-stream');
                         if(isset($request->header['name'])){
-                            $response->header('Content-Disposition', $allurl['name']);
+                            $response->header('Content-Disposition', 'attachment; filename='.$allurl['name']);
                         }
                         $response->header('x-bmclapi-hash', $downloadhash);
                         $response->sendfile($filepath);
@@ -108,9 +109,7 @@ class fileserver {
                 $url = $request->server['request_uri']."?".$request->server['query_string'];
             }
             //真的会有启动器不带ua的啊，太神奇了
-            if(!isset($request->server['user-agent'])){
-                $request->server['user-agent'] = "other";
-            }
+            $request->server['user-agent'] = $request->server['user-agent'] ?? "other";
             mlog(" Serve {$code} | {$request->server['remote_addr']} | {$request->server['server_protocol']} | {$url} | {$request->header['user-agent']};") ;
         });
         $server->handle('/measure', function ($request, $response) {

@@ -50,8 +50,7 @@ class socketio {
             }
             if ($code[0] == '41'){
                 mlog("[socket.io]Close Connection");
-                global $pid;
-                posix_kill($pid, SIGINT);
+                exits();
                 $client->close();
                 return;
             }
@@ -77,8 +76,7 @@ class socketio {
                 }
                 elseif (isset($jsondata[0][1]) && $jsondata[0][1] == "0"){
                     mlog("[socket.io]节点已掉线");
-                    global $pid;
-                    posix_kill($pid, SIGINT);
+                    exits();
                 }
                 elseif (isset($jsondata[0][1]) && $this->IsTime($jsondata[0][1])){
                     global $kadata;
@@ -88,8 +86,7 @@ class socketio {
                     mlog("[socket.io]Got data {$jsondata[0][0]["message"]}");
                     if (strpos($jsondata[0][0]["message"], "Error") !== false) {
                         mlog("[socket.io]节点启用失败");
-                        global $pid;
-                        posix_kill($pid, SIGINT);
+                        exits();
                     }
                 }
                 else {

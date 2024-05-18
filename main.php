@@ -4,8 +4,6 @@ use function Swoole\Coroutine\run;
 use function Swoole\Timer;
 declare(ticks=1)
 date_default_timezone_set('Asia/Shanghai');
-set_time_limit(0);
-ini_set('memory_limit', '-1');
 require './config.php';
 const PHPOBAVERSION = '1.5.0';
 const VERSION = '1.10.5';
@@ -23,23 +21,19 @@ global $enable;
 $enable = false;
 echo"OpenBmclApionPHP v". PHPOBAVERSION . "-" . VERSION . PHP_EOL;
 run(function()use ($config){
-    //注册信号处理器
+    //注册信号处理器、
+    function exits() {
+        global $shouldExit;
+        global $tokentimerid;
+        $shouldExit = true; // 设置退出标志
+        Swoole\Timer::clear($tokentimerid);
+        echo PHP_EOL;
+        mlog("正在退出...");
+    }
     function registerSigintHandler() {
-         global $tokentimerid;
         $shouldExit = false; // 初始化为false
-        Swoole\Process::signal(SIGINT, function ($signo) use ($tokentimerid) {
-            try {
-                global $shouldExit;
-                $shouldExit = true; // 设置退出标志
-                Swoole\Timer::clear($tokentimerid);
-                echo PHP_EOL;
-                mlog("正在退出...");
-                exit();
-            } catch (\Swoole\ExitException $e) {
-                //var_dump($e->getMessage());
-                //var_dump($e->getStatus() === 1);
-                //var_dump($e->getFlags() === SWOOLE_EXIT_IN_COROUTINE);
-            }
+        Swoole\Process::signal(SIGINT, function ($signo){
+            exits();
         });
     }
     //获取初次Token
@@ -55,7 +49,49 @@ run(function()use ($config){
     });
     registerSigintHandler();
     mlog("Timer start on ID{$tokentimerid}",1);
-    
+    //建立socketio连接主控
+    $socketio = new socketio(OPENBMCLAPIURL,$tokendata['token'],$config['advanced']['keepalive']);
+    mlog("正在连接主控");
+    Coroutine::create(function () use ($socketio){
+        $socketio->connect();
+    });
+    Coroutine::sleep(1);
+    //获取证书
+    $socketio->ack("request-cert");
+    Coroutine::sleep(1);
+    $allcert = $socketio->Getcert();
+    //写入证书并且是否损坏
+    if (!file_exists('./cert/'.$config['cluster']['CLUSTER_ID'].'.crt') && !file_exists('./cert/'.$config['cluster']['CLUSTER_ID'].'.key')) {
+        mlog("正在获取证书");
+        if (!file_exists("./cert")) {
+            mkdir("./cert",0777,true);
+        }
+        mlog("已获取证书,到期时间{$allcert['0']['1']['expires']}");
+        $cert = fopen('./cert/'.$config['cluster']['CLUSTER_ID'].'.crt', 'w');
+        $Writtencert = fwrite($cert, $allcert['0']['1']['cert']);
+        fclose($cert);
+        $cert = fopen('./cert/'.$config['cluster']['CLUSTER_ID'].'.key', 'w');
+        $Writtencert = fwrite($cert, $allcert['0']['1']['key']);
+        fclose($cert);
+    }
+    $crt = file_get_contents('./cert/'.$config['cluster']['CLUSTER_ID'].'.crt');
+    if ($crt!== $allcert['0']['1']['cert']) {
+        mlog("证书损坏/过期");
+        mlog("已获取新的证书,到期时间{$allcert['0']['1']['expires']}");
+        $cert = fopen('./cert/'.$config['cluster']['CLUSTER_ID'].'.crt', 'w');
+        $Writtencert = fwrite($cert, $allcert['0']['1']['cert']);
+        fclose($cert);
+        $cert = fopen('./cert/'.$config['cluster']['CLUSTER_ID'].'.key', 'w');
+        $Writtencert = fwrite($cert, $allcert['0']['1']['key']);
+        fclose($cert);
+    }
+    //启动http服务器
+    global $httpserver;
+    $httpserver = new fileserver($config['cluster']['host'],$config['cluster']['port'],$config['cluster']['CLUSTER_ID'].'.crt',$config['cluster']['CLUSTER_ID'].'.key',$config['cluster']['CLUSTER_SECRET']);
+    Coroutine::create(function () use ($config,$httpserver){
+        $httpserver->startserver();
+    });
+
     //下载文件列表
     $cluster = new cluster($tokendata['token'],VERSION);
     $files = $cluster->getFileList();
@@ -69,6 +105,7 @@ run(function()use ($config){
     elseif($config['file']['check'] == "exists"){
         $Missfile = $FilesCheck->FilesCheckerexists();
     }
+    //循环到没有Missfile这个变量
     if (is_array($Missfile)){
         mlog("缺失/损坏".count($Missfile)."个文件");
         while(is_array($Missfile)){
@@ -100,44 +137,7 @@ run(function()use ($config){
     }
     global $shouldExit;
     if (!is_array($Missfile) && !$shouldExit){//判断Missfile是否为空和是否是主动退出
-        $socketio = new socketio(OPENBMCLAPIURL,$tokendata['token'],$config['advanced']['keepalive']);
-        mlog("正在连接主控");
-        Coroutine::create(function () use ($socketio){
-            $socketio->connect();
-        });
-        Coroutine::sleep(1);
-        $socketio->ack("request-cert");
-        Coroutine::sleep(1);
-        $allcert = $socketio->Getcert();
-        if (!file_exists('./cert/'.$config['cluster']['CLUSTER_ID'].'.crt') && !file_exists('./cert/'.$config['cluster']['CLUSTER_ID'].'.key')) {
-            mlog("正在获取证书");
-            if (!file_exists("./cert")) {
-                mkdir("./cert",0777,true);
-            }
-            mlog("已获取证书,到期时间{$allcert['0']['1']['expires']}");
-            $cert = fopen('./cert/'.$config['cluster']['CLUSTER_ID'].'.crt', 'w');
-            $Writtencert = fwrite($cert, $allcert['0']['1']['cert']);
-            fclose($cert);
-            $cert = fopen('./cert/'.$config['cluster']['CLUSTER_ID'].'.key', 'w');
-            $Writtencert = fwrite($cert, $allcert['0']['1']['key']);
-            fclose($cert);
-        }
-        $crt = file_get_contents('./cert/'.$config['cluster']['CLUSTER_ID'].'.crt');
-        if ($crt!== $allcert['0']['1']['cert']) {
-            mlog("证书损坏/过期");
-            mlog("已获取新的证书,到期时间{$allcert['0']['1']['expires']}");
-            $cert = fopen('./cert/'.$config['cluster']['CLUSTER_ID'].'.crt', 'w');
-            $Writtencert = fwrite($cert, $allcert['0']['1']['cert']);
-            fclose($cert);
-            $cert = fopen('./cert/'.$config['cluster']['CLUSTER_ID'].'.key', 'w');
-            $Writtencert = fwrite($cert, $allcert['0']['1']['key']);
-            fclose($cert);
-        }
-        global $httpserver;
-        $httpserver = new fileserver($config['cluster']['host'],$config['cluster']['port'],$config['cluster']['CLUSTER_ID'].'.crt',$config['cluster']['CLUSTER_ID'].'.key',$config['cluster']['CLUSTER_SECRET']);
-        Coroutine::create(function () use ($config,$httpserver){
-            $httpserver->startserver();
-        });
+        //enable节点
         $socketio->enable($config['cluster']['public_host'],$config['cluster']['public_port'],$config['cluster']['byoc']);
     }
 });
