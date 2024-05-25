@@ -87,6 +87,7 @@ class socketio {
                     }
                 }
                 elseif (isset($jsondata[0][1]) && $this->IsTime($jsondata[0][1])){
+                    $this->rekeepalive = 0;
                     global $kadata;
                     mlog(" Keep-alive success: hits={$kadata['hits']} bytes={$kadata['bytes']} Time={$jsondata[0][1]}");
                 }
