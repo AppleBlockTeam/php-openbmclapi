@@ -20,12 +20,11 @@ class fileserver {
     }
 
     public function startserver() {
-        $this->server = $server = new Server($this->host, $this->port, SWOOLE_PROCESS, SWOOLE_SOCK_TCP | SWOOLE_SSL);
+        $this->server = $server = new Server($this->host, $this->port, true);
         $server->set([
             'ssl_cert_file' => './cert/'.$this->cert,
             'ssl_key_file' => './cert/'.$this->key,
-            'open_http2_protocol' => true,
-            'max_connection' => 10000,
+            'heartbeat_check_interval' => 60,  // 表示每60秒遍历一次
         ]);
         $server->handle('/', function ($request, $response) {
             $code = 404;
@@ -43,9 +42,8 @@ class fileserver {
         $server->handle('/download', function ($request, $response) {
             $downloadhash = str_replace('/download/', '', $request->server['request_uri']);
             if(isset($request->server['query_string'])){
-                parse_str($request->server['query_string'], $allurl);
                 $filepath = $this->dir.'/'.substr($downloadhash, 0, 2).'/'.$downloadhash;
-                if ($this->check_sign($downloadhash, $this->secret, $allurl['s'], $allurl['e'])){
+                if ($this->check_sign($downloadhash, $this->secret, $request->get['s'], $request->get['e'])){
                     if (!file_exists($filepath)) {
                         $download = new download();
                         $download->downloadnopoen($downloadhash);
@@ -68,7 +66,7 @@ class fileserver {
                         $code = 206;
                         $response->header('Content-Type', 'application/octet-stream');
                         if(isset($request->header['name'])){
-                             $response->header('Content-Disposition', 'attachment; filename='.$allurl['name']);
+                             $response->header('Content-Disposition', 'attachment; filename='.$request->get['name']);
                         }
                         $response->header('x-bmclapi-hash', $downloadhash);
                         $response->sendfile($filepath,$start_byte,$length);
@@ -83,7 +81,7 @@ class fileserver {
                         $code = 200;
                         $response->header('Content-Type', 'application/octet-stream');
                         if(isset($request->header['name'])){
-                            $response->header('Content-Disposition', 'attachment; filename='.$allurl['name']);
+                            $response->header('Content-Disposition', 'attachment; filename='.$request->get['name']);
                         }
                         $response->header('x-bmclapi-hash', $downloadhash);
                         $response->sendfile($filepath);
@@ -119,8 +117,7 @@ class fileserver {
             }
             if(isset($request->server['query_string'])){
             if(is_numeric($measuresize)){
-                parse_str($request->server['query_string'], $allurl);
-                if ($this->check_sign($request->server['request_uri'], $this->secret, $allurl['s'], $allurl['e'])){
+                if ($this->check_sign($request->server['request_uri'], $this->secret, $request->get['s'], $request->get['e'])){
                     if (!file_exists($this->dir.'/measure/'.$measuresize)) {
                         $file = fopen($this->dir.'/measure/'.$measuresize, 'w+');
                         $bytesToWrite = $measuresize * 1048576;
