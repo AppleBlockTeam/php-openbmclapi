@@ -75,8 +75,15 @@ class socketio {
                     });
                 }
                 elseif (isset($jsondata[0][1]) && $jsondata[0][1] == "0"){
-                    mlog("[socket.io]节点已掉线");
-                    exits();
+                    if($this->rekeepalive < 3){
+                        mlog("Keep-Alive失败,正在重试({$this->rekeepalive}/3)");
+                        global $kadata;
+                        $this->ack("keep-alive",$kadata);
+                        $this->rekeepalive++;
+                    }
+                    else{
+                        exits();
+                    }
                 }
                 elseif (isset($jsondata[0][1]) && $this->IsTime($jsondata[0][1])){
                     global $kadata;
