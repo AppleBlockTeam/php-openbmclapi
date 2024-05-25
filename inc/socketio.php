@@ -8,6 +8,7 @@ class socketio {
     private $data;
     private $certdata;
     private $kattl;
+    private $rekeepalive;
     private $Connected = false;
     public function __construct($url,$token,$kattl) {
         $this->url = $url;
