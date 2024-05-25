@@ -16,7 +16,7 @@ class token{
             'User-Agent' => 'openbmclapi-cluster/'.$this->version,
             'Content-Type' => 'application/json; charset=utf-8',
         ]);
-        $client->set(['timeout' => 1]);
+        $client->set(['timeout' => 20]);
         $client->get('/openbmclapi-agent/challenge?clusterId='.$this->clusterId);
         $client->close();
         $challenge = json_decode($client->body, true);

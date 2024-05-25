@@ -159,7 +159,7 @@ class fileserver {
         $server->start();
     }
     public function stopserver() {
-        mlog("Stop Http Server");
+        mlog("Stop Http Server",1);
         $this->server->shutdown();
     }
     //你问我这段函数为什么要放在server里面? 因为只有server需要check_sign(

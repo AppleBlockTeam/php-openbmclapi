@@ -2,7 +2,6 @@
 use Swoole\Coroutine;
 use function Swoole\Coroutine\run;
 use function Swoole\Timer;
-declare(ticks=1)
 date_default_timezone_set('Asia/Shanghai');
 require './config.php';
 const PHPOBAVERSION = '1.6.0';
@@ -15,11 +14,9 @@ $list = glob('inc/*.php');
 foreach ($list as $file) {
     require $file;
 }
-global $pid;
-$pid = getmypid();
 global $enable;
 $enable = false;
-echo"OpenBmclApionPHP v". PHPOBAVERSION . "-" . VERSION . PHP_EOL;
+mlog("OpenBmclApi on PHP v". PHPOBAVERSION . "-" . VERSION,0,true);
 run(function()use ($config){
     //注册信号处理器、
     function exits() {
@@ -31,6 +28,7 @@ run(function()use ($config){
         mlog("正在退出...");
     }
     function registerSigintHandler() {
+        global $shouldExit;
         $shouldExit = false; // 初始化为false
         Swoole\Process::signal(SIGINT, function ($signo){
             exits();

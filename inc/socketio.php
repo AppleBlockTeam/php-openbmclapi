@@ -43,7 +43,7 @@ class socketio {
             }
             if ($code[0] == '42'){
                 $data = substr($data, strlen($code[0]));
-                mlog("[socket.io]Got data {$data}");
+                mlog("[socket.io]{$data}");
             }
             if ($code[0] == '2'){
                 $client->push('3');
@@ -92,9 +92,9 @@ class socketio {
                     mlog(" Keep-alive success: hits={$kadata['hits']} bytes={$kadata['bytes']} Time={$jsondata[0][1]}");
                 }
                 elseif (isset($jsondata[0][0]["message"])){
-                    mlog("[socket.io]Got data {$jsondata[0][0]["message"]}");
+                    mlog("[socket.io]{$jsondata[0][0]["message"]}");
                     if (strpos($jsondata[0][0]["message"], "Error") !== false) {
-                        mlog("[socket.io]节点启用失败");
+                        mlog("节点启用失败",2);
                         exits();
                     }
                 }
@@ -200,7 +200,7 @@ class socketio {
             $this->ack("disable");
             Coroutine::sleep(2);
         }
-        mlog("[socket.io]Close Connection");
+        mlog("[socket.io]Close Connection",1);
         $this->client->close();
     }
 }

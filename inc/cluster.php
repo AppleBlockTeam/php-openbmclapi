@@ -95,15 +95,14 @@ class cluster{
             'Accept' => '*',
             'Authorization' => "Bearer {$this->token}"
         ]);
-        mlog("Start FileList Download");
-        if (!$client->download('/openbmclapi/files',$DOWNLOAD_DIR.'/filecache/filelist.zstd')) {
-            mlog("FileList Download Failed",2);
+        mlog("Starting to download fileList");
+        if (!$client->get('/openbmclapi/files')) {
+            mlog("Failed to download fileList",2);
             $client->close();
         }
         else{
-            mlog("FileList Download Success");
+            $this->compressedData = zstd_uncompress($client->body);
             $client->close();
-            $this->compressedData = file_get_contents("compress.zstd://".$DOWNLOAD_DIR."/filecache/filelist.zstd");
         }
         $parser = new ParseFileList($this->compressedData);
         $files = $parser->parse();
