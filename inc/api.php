@@ -1,8 +1,7 @@
 <?php
 class api{
     private static $config = [];
-    private static $info = ['enable'=>false,'isSynchronized'=>true];
-    private static $server;
+    private static $info = ['enable'=>false,'isSynchronized'=>false,'uptime'=>0];
     
     public static function getconfig($newConfig = null) {
         if (!is_null($newConfig)) {
@@ -16,11 +15,5 @@ class api{
             self::$info = $newinfo;
         }
         return self::$info;
-    }
-    public static function getserver($newserver = null) {
-        if (!is_null($newserver)) {
-            self::$server = $newserver;
-        }
-        return self::$server;
     }
 }

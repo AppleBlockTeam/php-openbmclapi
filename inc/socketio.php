@@ -61,8 +61,9 @@ class socketio {
                     $this->certdata = $jsondata;
                 }
                 elseif (isset($jsondata[0][1]) && $jsondata[0][1] == "1"){
-                    $enable = api::getinfo()['enable'];
-                    $enable = true;
+                    $enable = api::getinfo();
+                    $enable['enable'] = true;
+                    api::getinfo($enable);
                     mlog("节点已启用 Let's Goooooo!");
                     global $kacounters;
                     $kacounters = new Swoole\Table(1024);
@@ -115,12 +116,8 @@ class socketio {
             //var_dump($data);
         }
         global $shouldExit;
-        $httpserver = api::getserver();
+        global $httpserver;
             if ($shouldExit) {
-                $enable = api::getinfo()['enable'];
-                if($enable){
-                    Swoole\Timer::clear($katimeid);
-                }
                 $this->disable();
                 $httpserver->stopserver();
                 return;

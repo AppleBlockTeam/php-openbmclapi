@@ -158,12 +158,15 @@ class fileserver {
             $type = $request->server['request_uri'] ? substr($request->server['request_uri'], strlen('/api/cluster') + 1) : '';
             if($type === "type"){
                 $code = 200;
-                $response->header('Content-Type: application/json; charset=utf-8');
-
-                $response->end("hello");
+                $response->header('Content-Type', 'application/json; charset=utf-8');
+                $type = new webapi();
+                $response->end($type->gettype());
             }
             elseif($type === "status"){
-
+                $code = 200;
+                $response->header('Content-Type', 'application/json; charset=utf-8');
+                $type = new webapi();
+                $response->end($type->getstatus());
             }
             elseif($type === "info"){
 

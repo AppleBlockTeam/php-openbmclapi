@@ -12,7 +12,7 @@ api::getconfig($config);
 const PHPOBAVERSION = '1.6.0';
 const VERSION = '1.10.6';
 $download_dir = api::getconfig()['file']['cache_dir'];
-const USERAGENT = 'openbmclapi-cluster/' . VERSION . '  ' . 'PHP-OpenBmclApi/'.PHPOBAVERSION;
+const USERAGENT = 'openbmclapi-cluster/' . VERSION . '  ' . 'php-openbmclapi/'.PHPOBAVERSION;
 const OPENBMCLAPIURL = 'openbmclapi.staging.bangbang93.com';
 mlog("OpenBmclApi on PHP v". PHPOBAVERSION . "-" . VERSION,0,true);
 run(function(){
@@ -20,9 +20,8 @@ run(function(){
     //注册信号处理器、
     function exits() {
         global $shouldExit;
-        global $tokentimerid;
         $shouldExit = true; // 设置退出标志
-        Swoole\Timer::clear($tokentimerid);
+        Swoole\Timer::clearAll();
         echo PHP_EOL;
         mlog("正在退出...");
     }
@@ -83,11 +82,14 @@ run(function(){
         fclose($cert);
     }
     //启动http服务器
+    global $httpserver;
     $httpserver = new fileserver($config['cluster']['host'],$config['cluster']['port'],$config['cluster']['CLUSTER_ID'].'.crt',$config['cluster']['CLUSTER_ID'].'.key',$config['cluster']['CLUSTER_SECRET']);
     Coroutine::create(function () use ($config,$httpserver){
         $httpserver->startserver();
     });
-    api::getserver($httpserver);
+    $uptime = api::getinfo();
+    $uptime['uptime'] = time();
+    api::getinfo($uptime);
 
     //下载文件列表
     $cluster = new cluster($tokendata['token'],VERSION);
@@ -122,6 +124,9 @@ run(function(){
                 //mlog("缺失/损坏".count($Missfile)."个文件");
             }
             else{
+                $isSynchronized = api::getinfo();
+                $isSynchronized['isSynchronized'] = true;
+                api::getinfo($isSynchronized);
                 mlog("检查文件完毕,没有缺失/损坏");
             }
         }
@@ -129,6 +134,9 @@ run(function(){
     else{
         global $shouldExit;
         if (!$shouldExit){
+            $isSynchronized = api::getinfo();
+            $isSynchronized['isSynchronized'] = true;
+            api::getinfo($isSynchronized);
             mlog("检查文件完毕,没有缺失/损坏");
         }
     }
