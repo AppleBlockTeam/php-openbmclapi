@@ -8,7 +8,7 @@ class socketio {
     private $data;
     private $certdata;
     private $kattl;
-    private $rekeepalive;
+    private $rekeepalive = 1;
     private $Connected = false;
     public function __construct($url,$token,$kattl) {
         $this->url = $url;
@@ -61,7 +61,7 @@ class socketio {
                     $this->certdata = $jsondata;
                 }
                 elseif (isset($jsondata[0][1]) && $jsondata[0][1] == "1"){
-                    global $enable;
+                    $enable = api::getinfo()['enable'];
                     $enable = true;
                     mlog("节点已启用 Let's Goooooo!");
                     global $kacounters;
@@ -76,7 +76,7 @@ class socketio {
                     });
                 }
                 elseif (isset($jsondata[0][1]) && $jsondata[0][1] == "0"){
-                    if($this->rekeepalive < 3){
+                    if($this->rekeepalive <= 3){
                         mlog("Keep-Alive失败,正在重试({$this->rekeepalive}/3)");
                         global $kadata;
                         $this->ack("keep-alive",$kadata);
@@ -87,7 +87,7 @@ class socketio {
                     }
                 }
                 elseif (isset($jsondata[0][1]) && $this->IsTime($jsondata[0][1])){
-                    $this->rekeepalive = 0;
+                    $this->rekeepalive = 1;
                     global $kadata;
                     mlog(" Keep-alive success: hits={$kadata['hits']} bytes={$kadata['bytes']} Time={$jsondata[0][1]}");
                 }
@@ -115,9 +115,9 @@ class socketio {
             //var_dump($data);
         }
         global $shouldExit;
-        global $httpserver;
+        $httpserver = api::getserver();
             if ($shouldExit) {
-                global $enable;
+                $enable = api::getinfo()['enable'];
                 if($enable){
                     Swoole\Timer::clear($katimeid);
                 }
@@ -195,7 +195,7 @@ class socketio {
     }
 
     public function disable() {
-        global $enable;
+        $enable = api::getinfo()['enable'];
         if ($enable){
             $this->ack("disable");
             Coroutine::sleep(2);

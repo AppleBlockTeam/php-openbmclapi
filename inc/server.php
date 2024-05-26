@@ -10,12 +10,11 @@ class fileserver {
     private $dir;
     private $secret;
     public function __construct($host,$port,$cert,$key,$secret) {
-        global $DOWNLOAD_DIR;
         $this->host = $host;
         $this->port = $port;
         $this->cert = $cert;
         $this->key = $key;
-        $this->dir = $DOWNLOAD_DIR;
+        $this->dir = api::getconfig()['file']['cache_dir'];
         $this->secret = $secret;
     }
 
@@ -57,8 +56,7 @@ class fileserver {
                         }
                         $length = $end_byte - $start_byte + 1;
                         $fileSize = filesize($filepath);
-                        global $enable;
-                        if ($enable){
+                        if (api::getinfo()['enable']){
                             global $kacounters;
                             $kacounters->incr('1','hits');
                             $kacounters->incr('1','bytes',$length);
@@ -72,7 +70,7 @@ class fileserver {
                         $response->sendfile($filepath,$start_byte,$length);
                     }
                     else{
-                        global $enable;
+                        $enable = api::getinfo()['enable'];
                         if ($enable){
                             global $kacounters;
                             $kacounters->incr('1','hits');
@@ -155,6 +153,36 @@ class fileserver {
             }
             mlog(" Serve {$code} | {$request->server['remote_addr']} | {$request->server['server_protocol']} | {$url} | {$request->header['user-agent']};") ;
         });
+
+        $server->handle('/api/cluster', function ($request, $response) {
+            $type = $request->server['request_uri'] ? substr($request->server['request_uri'], strlen('/api/cluster') + 1) : '';
+            if($type === "type"){
+                $code = 200;
+                $response->header('Content-Type: application/json; charset=utf-8');
+
+                $response->end("hello");
+            }
+            elseif($type === "status"){
+
+            }
+            elseif($type === "info"){
+
+            }
+            else{
+                $code = 403;
+                $response->status($code);
+                $response->header('Content-Type', 'text/html; charset=utf-8');
+                $response->end("<title>Error</title><pre>Forbidden</pre>");
+            }
+            if(!isset($request->server['query_string'])){
+                $url = $request->server['request_uri'];
+            }
+            else{
+                $url = $request->server['request_uri']."?".$request->server['query_string'];
+            }
+            mlog(" Serve {$code} | {$request->server['remote_addr']} | {$request->server['server_protocol']} | {$url} | {$request->header['user-agent']};") ;
+        });
+
         mlog("Start Http Server on {$this->host}:{$this->port}");
         $server->start();
     }

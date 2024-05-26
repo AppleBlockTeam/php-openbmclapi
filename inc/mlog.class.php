@@ -46,6 +46,5 @@ function mlog($content, $type = 0, $minimalFormat = false)
 
 function isDebugMode()
 {
-    global $config;
-    return isset($config['advanced']['Debug']) && $config['advanced']['Debug'];
+    return isset(api::getconfig()['advanced']['Debug']) && api::getconfig()['advanced']['Debug'];
 }

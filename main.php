@@ -4,20 +4,19 @@ use function Swoole\Coroutine\run;
 use function Swoole\Timer;
 date_default_timezone_set('Asia/Shanghai');
 require './config.php';
-const PHPOBAVERSION = '1.6.0';
-const VERSION = '1.10.6';
-global $DOWNLOAD_DIR;
-$DOWNLOAD_DIR = $config['file']['cache_dir'];
-const USERAGENT = 'openbmclapi-cluster/' . VERSION . '  ' . 'PHP-OpenBmclApi/'.PHPOBAVERSION;
-const OPENBMCLAPIURL = 'openbmclapi.bangbang93.com';
 $list = glob('inc/*.php');
 foreach ($list as $file) {
     require $file;
 }
-global $enable;
-$enable = false;
+api::getconfig($config);
+const PHPOBAVERSION = '1.6.0';
+const VERSION = '1.10.6';
+$download_dir = api::getconfig()['file']['cache_dir'];
+const USERAGENT = 'openbmclapi-cluster/' . VERSION . '  ' . 'PHP-OpenBmclApi/'.PHPOBAVERSION;
+const OPENBMCLAPIURL = 'openbmclapi.staging.bangbang93.com';
 mlog("OpenBmclApi on PHP v". PHPOBAVERSION . "-" . VERSION,0,true);
-run(function()use ($config){
+run(function(){
+    $config = api::getconfig();
     //注册信号处理器、
     function exits() {
         global $shouldExit;
@@ -84,11 +83,11 @@ run(function()use ($config){
         fclose($cert);
     }
     //启动http服务器
-    global $httpserver;
     $httpserver = new fileserver($config['cluster']['host'],$config['cluster']['port'],$config['cluster']['CLUSTER_ID'].'.crt',$config['cluster']['CLUSTER_ID'].'.key',$config['cluster']['CLUSTER_SECRET']);
     Coroutine::create(function () use ($config,$httpserver){
         $httpserver->startserver();
     });
+    api::getserver($httpserver);
 
     //下载文件列表
     $cluster = new cluster($tokendata['token'],VERSION);
