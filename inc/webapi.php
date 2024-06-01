@@ -2,23 +2,24 @@
 class webapi{
     public function gettype() {
         $array = [
-            'code' => 200,
-            'msg' => 'success',
             'type' => 'php-openbmclapi',
-            'version'=> PHPOBAVERSION . "-" . VERSION
+            'openbmclapiVersion' => VERSION,
+            'version'=> 'v' . PHPOBAVERSION
         ];
         $type = json_encode($array);
         return $type;
     }
     public function getstatus() {
         $array = [
-            'code' => 200,
-            'msg' => 'success',
-            'data' => [
+            'clusterStatus' => [
                 "isEnabled" => api::getinfo()['enable'],
                 "isSynchronized" => api::getinfo()['isSynchronized'],
                 "isTrusted" => true,
-                "uptime" => api::getinfo()['uptime']
+                "uptime" => api::getinfo()['uptime'],
+                "systemOccupancy" =>[
+                    "memoryUsage" => memory_get_usage(),
+                    "loadAverage" => sys_getloadavg()[0]
+                ]
             ]
         ];
         $type = json_encode($array);

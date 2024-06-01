@@ -13,7 +13,7 @@ const PHPOBAVERSION = '1.6.0';
 const VERSION = '1.10.6';
 $download_dir = api::getconfig()['file']['cache_dir'];
 const USERAGENT = 'openbmclapi-cluster/' . VERSION . '  ' . 'php-openbmclapi/'.PHPOBAVERSION;
-const OPENBMCLAPIURL = 'openbmclapi.staging.bangbang93.com';
+const OPENBMCLAPIURL = 'openbmclapi.bangbang93.com';
 mlog("OpenBmclApi on PHP v". PHPOBAVERSION . "-" . VERSION,0,true);
 run(function(){
     $config = api::getconfig();

@@ -47,7 +47,13 @@ class socketio {
             }
             if ($code[0] == '42'){
                 $data = substr($data, strlen($code[0]));
-                mlog("[socket.io]{$data}");
+                $jsondata = json_decode($data);
+                if(isset($jsondata[0])){
+                    mlog("{$jsondata[1]}");
+                }
+                else{
+                    mlog("[socket.io]{$data}");
+                }
             }
             if ($code[0] == '2'){
                 $client->push('3');
@@ -112,7 +118,7 @@ class socketio {
                     }
                 }
                 else {
-                   mlog("[socket.io]Got data {$data}");
+                    mlog("[socket.io]Got data {$data}");
                 };
                 //mlog("[socket.io]Got MESSAGE {$data}",1);
             }

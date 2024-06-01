@@ -177,12 +177,14 @@ class fileserver {
                 $response->header('Content-Type', 'text/html; charset=utf-8');
                 $response->end("<title>Error</title><pre>Forbidden</pre>");
             }
+
             if(!isset($request->server['query_string'])){
                 $url = $request->server['request_uri'];
             }
             else{
                 $url = $request->server['request_uri']."?".$request->server['query_string'];
             }
+            
             mlog(" Serve {$code} | {$request->server['remote_addr']} | {$request->server['server_protocol']} | {$url} | {$request->header['user-agent']};") ;
         });
 
