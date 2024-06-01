@@ -10,7 +10,7 @@ class socketio {
     private $kattl;
     private $rekeepalive = 1;
     private $Connected = false;
-    public function __construct($url,$token,$kattl) {
+    public function __construct($url=null,$token=null,$kattl=null) {
         $this->url = $url;
         $this->token = $token;
         $this->kattl = $kattl;
@@ -25,9 +25,13 @@ class socketio {
         if ($ret) {
             $client->push('40'.json_encode($auth));
         }
-
         while(true) {
-            $alldata = $client->recv(1);
+            $alldata = $client->recv();
+            if (empty($alldata)) {
+                $client->close();
+                mlog("与主控的连接断开");
+                break;
+            }
             if (!is_bool($alldata)){
             $this->data = $data = $alldata->data;
             preg_match('/^\d+/', $data, $code);
@@ -51,9 +55,9 @@ class socketio {
             }
             if ($code[0] == '41'){
                 mlog("[socket.io]Close Connection");
-                exits();
                 $client->close();
-                return;
+                exits();
+                break;
             }
             if ($code[0] == '430'){
                 $jsondata = json_decode(substr($data, strlen($code[0])),true);
@@ -62,19 +66,27 @@ class socketio {
                 }
                 elseif (isset($jsondata[0][1]) && $jsondata[0][1] == "1"){
                     $enable = api::getinfo();
-                    $enable['enable'] = true;
-                    api::getinfo($enable);
-                    mlog("节点已启用 Let's Goooooo!");
-                    global $kacounters;
-                    $kacounters = new Swoole\Table(1024);
-                    $kacounters->column('hits', Swoole\Table::TYPE_FLOAT);
-                    $kacounters->column('bytes', Swoole\Table::TYPE_FLOAT);
-                    $kacounters->create();
-                    $kacounters->set('1', ['hits' => 0, 'bytes' => 0]);
-                    global $katimeid;
-                    $katimeid = Swoole\Timer::tick($this->kattl*1000, function () use ($kacounters) {
-                        $this->keepalive($kacounters);
-                    });
+                    if(!$enable['enable']){
+                        $enable = api::getinfo();
+                        $enable['enable'] = true;
+                        api::getinfo($enable);
+                        mlog("节点已启用 Let's Goooooo!");
+                        global $kacounters;
+                        $kacounters = new Swoole\Table(1024);
+                        $kacounters->column('hits', Swoole\Table::TYPE_FLOAT);
+                        $kacounters->column('bytes', Swoole\Table::TYPE_FLOAT);
+                        $kacounters->create();
+                        $kacounters->set('1', ['hits' => 0, 'bytes' => 0]);
+                        global $katimeid;
+                        $katimeid = Swoole\Timer::tick($this->kattl*1000, function () use ($kacounters) {
+                            $this->keepalive($kacounters);
+                        });
+                    }
+                    else{
+                        $client->close();
+                        break;
+                        mlog("[socket.io]Close Connection");
+                    }
                 }
                 elseif (isset($jsondata[0][1]) && $jsondata[0][1] == "0"){
                     if($this->rekeepalive <= 3){
@@ -115,13 +127,6 @@ class socketio {
             }
             //var_dump($data);
         }
-        global $shouldExit;
-        global $httpserver;
-            if ($shouldExit) {
-                $this->disable();
-                $httpserver->stopserver();
-                return;
-            }
     }
     }
     public function Getcert() {
@@ -195,9 +200,6 @@ class socketio {
         $enable = api::getinfo()['enable'];
         if ($enable){
             $this->ack("disable");
-            Coroutine::sleep(2);
         }
-        mlog("[socket.io]Close Connection",1);
-        $this->client->close();
     }
 }

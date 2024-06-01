@@ -22,6 +22,14 @@ run(function(){
         global $shouldExit;
         $shouldExit = true; // 设置退出标志
         Swoole\Timer::clearAll();
+        global $socketio;
+        if (is_object($socketio)) {
+            $socketio->disable();
+        }
+        global $httpserver;
+        if (is_object($httpserver)) {
+            $httpserver->stopserver();
+        }
         echo PHP_EOL;
         mlog("正在退出...");
     }
@@ -46,9 +54,10 @@ run(function(){
     registerSigintHandler();
     mlog("Timer start on ID{$tokentimerid}",1);
     //建立socketio连接主控
+    global $socketio;
     $socketio = new socketio(OPENBMCLAPIURL,$tokendata['token'],$config['advanced']['keepalive']);
     mlog("正在连接主控");
-    Coroutine::create(function () use ($socketio){
+    Coroutine::create(function () use (&$socketio){
         $socketio->connect();
     });
     Coroutine::sleep(1);
