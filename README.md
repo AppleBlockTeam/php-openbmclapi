@@ -26,7 +26,7 @@
 
   PHP 版本 >= 8.0.0
 
-  [Swoole](https://www.swoole.com/) 版本 >= 5.1.
+  [Swoole](https://www.swoole.com/) 版本 >= 5.1.0
   
   以及对应版本的 [Zstd](https://github.com/kjdev/php-ext-zstd)
 
@@ -81,12 +81,12 @@ $config=[
 ```
 
 ## 📍 Todo
-- [ ] Web仪表盘(主要)
 - [ ] 支持WebDAV
 - [ ] 打包二进制文件
-- [ ] 完善Log系统
 - [ ] 添加注释
 - [x] 可以正常上线使用
+- [x] 插件系统
+- [x] 完善Log系统
 
 ## ❓ FAQ
 

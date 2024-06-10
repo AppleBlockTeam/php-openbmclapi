@@ -13,7 +13,7 @@ const PHPOBAVERSION = '1.6.0';
 const VERSION = '1.10.9';
 $download_dir = api::getconfig()['file']['cache_dir'];
 const USERAGENT = 'openbmclapi-cluster/' . VERSION . '  ' . 'php-openbmclapi/'.PHPOBAVERSION;
-const OPENBMCLAPIURL = 'openbmclapi.bangbang93.com';
+const OPENBMCLAPIURL = 'openbmclapi.staging.bangbang93.com';
 mlog("OpenBmclApi on PHP v". PHPOBAVERSION . "-" . VERSION,0,true);
 run(function(){
     $config = api::getconfig();
@@ -58,6 +58,7 @@ run(function(){
     });
     registerSigintHandler();
     mlog("Timer start on ID{$tokentimerid}",1);
+
     //建立socketio连接主控
     global $socketio;
     $socketio = new socketio(OPENBMCLAPIURL,$tokendata['token'],$config['advanced']['keepalive']);
@@ -95,9 +96,16 @@ run(function(){
         $Writtencert = fwrite($cert, $allcert['0']['1']['key']);
         fclose($cert);
     }
-    //启动http服务器
+    //设置http服务器
     global $httpserver;
     $httpserver = new fileserver($config['cluster']['host'],$config['cluster']['port'],$config['cluster']['CLUSTER_ID'].'.crt',$config['cluster']['CLUSTER_ID'].'.key',$config['cluster']['CLUSTER_SECRET']);
+    $server = $httpserver->setupserver();
+
+    //开始加载插件
+    $pluginsManager = new PluginsManager();
+    $pluginsManager->loadPlugins($server);
+
+    //启动http服务器
     Coroutine::create(function () use ($config,$httpserver){
         $httpserver->startserver();
     });

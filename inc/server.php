@@ -9,6 +9,7 @@ class fileserver {
     private $server;
     private $dir;
     private $secret;
+    private $lock;
     public function __construct($host,$port,$cert,$key,$secret) {
         $this->host = $host;
         $this->port = $port;
@@ -16,9 +17,10 @@ class fileserver {
         $this->key = $key;
         $this->dir = api::getconfig()['file']['cache_dir'];
         $this->secret = $secret;
+        $this->lock = new Swoole\Lock(SWOOLE_RWLOCK);
     }
 
-    public function startserver() {
+    public function setupserver() {
         $this->server = $server = new Server($this->host, $this->port, true);
         $server->set([
             'ssl_cert_file' => './cert/'.$this->cert,
@@ -188,9 +190,12 @@ class fileserver {
             
             mlog(" Serve {$code} | {$request->server['remote_addr']} | {$request->server['server_protocol']} | {$url} | {$request->header['user-agent']};") ;
         });
+        return $server;
+    }
 
+    public function startserver() {
         mlog("Start Http Server on {$this->host}:{$this->port}");
-        $server->start();
+        $this->server->start();
     }
     public function stopserver() {
         mlog("Stop Http Server",1);
