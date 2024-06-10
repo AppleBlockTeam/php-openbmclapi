@@ -126,6 +126,9 @@ run(function(){
     elseif($config['file']['check'] == "exists"){
         $Missfile = $FilesCheck->FilesCheckerexists();
     }
+    $isSynchronized = api::getinfo();
+    $isSynchronized['isSynchronized'] = true;
+    api::getinfo($isSynchronized);
     //循环到没有Missfile这个变量
     if (is_array($Missfile)){
         mlog("缺失/损坏".count($Missfile)."个文件");
@@ -147,7 +150,7 @@ run(function(){
             }
             else{
                 $isSynchronized = api::getinfo();
-                $isSynchronized['isSynchronized'] = true;
+                $isSynchronized['isSynchronized'] = false;
                 api::getinfo($isSynchronized);
                 mlog("检查文件完毕,没有缺失/损坏");
             }
@@ -157,7 +160,7 @@ run(function(){
         global $shouldExit;
         if (!$shouldExit){
             $isSynchronized = api::getinfo();
-            $isSynchronized['isSynchronized'] = true;
+            $isSynchronized['isSynchronized'] = false;
             api::getinfo($isSynchronized);
             mlog("检查文件完毕,没有缺失/损坏");
         }
