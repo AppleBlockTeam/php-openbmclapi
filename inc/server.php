@@ -55,12 +55,6 @@ class fileserver {
                             $end_byte = filesize($filepath) - 1;
                         }
                         $length = $end_byte - $start_byte + 1;
-                        $fileSize = filesize($filepath);
-                        if (api::getinfo()['enable']){
-                            global $kacounters;
-                            $kacounters->incr('1','hits');
-                            $kacounters->incr('1','bytes',$length);
-                        }
                         $code = 206;
                         $response->header('Content-Type', 'application/octet-stream');
                         if(isset($request->header['name'])){
@@ -70,12 +64,7 @@ class fileserver {
                         $response->sendfile($filepath,$start_byte,$length);
                     }
                     else{
-                        $enable = api::getinfo()['enable'];
-                        if ($enable){
-                            global $kacounters;
-                            $kacounters->incr('1','hits');
-                            $kacounters->incr('1','bytes',filesize($filepath));
-                        }
+                        $length = filesize($filepath);
                         $code = 200;
                         $response->header('Content-Type', 'application/octet-stream');
                         if(isset($request->header['name'])){
@@ -83,6 +72,15 @@ class fileserver {
                         }
                         $response->header('x-bmclapi-hash', $downloadhash);
                         $response->sendfile($filepath);
+                    }
+                    if (api::getinfo()['enable']){
+                        global $kacounters;
+                        $kacounters->incr('1','hits');
+                        $kacounters->incr('1','bytes',$length);
+
+                        global $dbcounters;
+                        $dbcounters->incr('1','hits');
+                        $dbcounters->incr('1','bytes',$length);
                     }
                 }
                 else{
@@ -169,7 +167,10 @@ class fileserver {
                 $response->end($type->getstatus());
             }
             elseif($type === "info"){
-
+                $code = 200;
+                $response->header('Content-Type', 'application/json; charset=utf-8');
+                $type = new webapi();
+                $response->end($type->getinfo());
             }
             else{
                 $code = 403;
@@ -196,7 +197,7 @@ class fileserver {
         $this->server->shutdown();
     }
     //你问我这段函数为什么要放在server里面? 因为只有server需要check_sign(
-    public function check_sign(string $hash, string $secret, string $s, string $e): bool {
+    public function check_sign(string $hash, string $secret, string $s=null, string $e=null): bool {
         try {
             $t = intval($e, 36);
         } catch (\Exception $ex) {

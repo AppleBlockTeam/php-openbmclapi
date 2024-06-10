@@ -87,6 +87,16 @@ class socketio {
                         $katimeid = Swoole\Timer::tick($this->kattl*1000, function () use ($kacounters) {
                             $this->keepalive($kacounters);
                         });
+
+                        global $dbcounters;
+                        $dbcounters = new Swoole\Table(1024);
+                        $dbcounters->column('hits', Swoole\Table::TYPE_FLOAT);
+                        $dbcounters->column('bytes', Swoole\Table::TYPE_FLOAT);
+                        $dbcounters->create();
+                        $dbcounters->set('1', ['hits' => 0, 'bytes' => 0]);
+                        $dbtimeid = Swoole\Timer::tick(3000, function () use ($dbcounters) {
+                            $this->updatedatabase($dbcounters);
+                        });
                     }
                     else{
                         $client->close();
@@ -197,6 +207,11 @@ class socketio {
         $kacounters->set('1', ['hits' => 0, 'bytes' => 0]);
     }
 
+    public function updatedatabase($dbcounters) {
+        $database = new database();
+        $database->writeDatabase($dbcounters->get('1','hits'),$dbcounters->get('1','bytes'));
+        $dbcounters->set('1', ['hits' => 0, 'bytes' => 0]);
+    }
     public function IsTime($inputString) {
         $pattern = '/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/';
         return preg_match($pattern, $inputString) === 1;
@@ -207,5 +222,7 @@ class socketio {
         if ($enable){
             $this->ack("disable");
         }
+        $this->client->close();
+        $this->Connected = false;
     }
 }

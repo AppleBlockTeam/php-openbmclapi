@@ -10,7 +10,7 @@ foreach ($list as $file) {
 }
 api::getconfig($config);
 const PHPOBAVERSION = '1.6.0';
-const VERSION = '1.10.6';
+const VERSION = '1.10.9';
 $download_dir = api::getconfig()['file']['cache_dir'];
 const USERAGENT = 'openbmclapi-cluster/' . VERSION . '  ' . 'php-openbmclapi/'.PHPOBAVERSION;
 const OPENBMCLAPIURL = 'openbmclapi.bangbang93.com';
@@ -40,6 +40,11 @@ run(function(){
             exits();
         });
     }
+
+    //创建数据库
+    $database = new database();
+    $database->initializedatabase();
+
     //获取初次Token
     $token = new token($config['cluster']['CLUSTER_ID'],$config['cluster']['CLUSTER_SECRET'],VERSION);
     $tokendata = $token->gettoken();

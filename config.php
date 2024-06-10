@@ -12,6 +12,7 @@ $config=[
     "file"=> [
         "cache_dir"=> "./cache",//缓存文件夹
         "check"=> "size",//检查文件策略(hash:检查文件hash size:检查文件大小 exists:检查文件是否存在)
+        "database_dir"=> "./database",//访问数据数据库目录
     ],
     "advanced"=> [
         "keepalive"=> 60,//keepalive时间,秒为单位(不建议调整)
