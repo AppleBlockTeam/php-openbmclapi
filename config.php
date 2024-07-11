@@ -15,7 +15,7 @@ $config=[
         "database_dir"=> "./database",//访问数据数据库目录
     ],
     "advanced"=> [
-        "CenterUrl"=> "https://openbmclapi.staging.bangbang93.com",//主控链接(不建议调整)
+        "Centerurl"=> "https://openbmclapi.staging.bangbang93.com",//主控链接(不建议调整)
         "keepalive"=> 60,//keepalive时间,秒为单位(不建议调整)
         "MaxConcurrent"=> 30,//下载使用的线程
         "Debug"=> false,//Debug开关

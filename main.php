@@ -16,7 +16,7 @@ const USERAGENT = 'openbmclapi-cluster/' . VERSION . '  ' . 'php-openbmclapi/'.P
 mlog("OpenBmclApi on PHP v". PHPOBAVERSION . "-" . VERSION,0,true);
 
 //预处理主控链接
-$parsed = parse_url(api::getconfig()['advanced']['CenterUrl']);
+$parsed = parse_url(api::getconfig()['advanced']['Centerurl']);
 $scheme = isset($parsed['scheme']) ? $parsed['scheme'] : '';
 $host = isset($parsed['host']) ? $parsed['host'] : '';
 $port = isset($parsed['port']) ? $parsed['port'] : ($scheme === 'https' ? 443 : 80);
