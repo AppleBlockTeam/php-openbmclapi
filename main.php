@@ -13,8 +13,16 @@ const PHPOBAVERSION = '1.6.0';
 const VERSION = '1.10.9';
 $download_dir = api::getconfig()['file']['cache_dir'];
 const USERAGENT = 'openbmclapi-cluster/' . VERSION . '  ' . 'php-openbmclapi/'.PHPOBAVERSION;
-const OPENBMCLAPIURL = 'openbmclapi.staging.bangbang93.com';
 mlog("OpenBmclApi on PHP v". PHPOBAVERSION . "-" . VERSION,0,true);
+
+//预处理主控链接
+$parsed = parse_url(api::getconfig()['advanced']['CenterUrl']);
+$scheme = isset($parsed['scheme']) ? $parsed['scheme'] : '';
+$host = isset($parsed['host']) ? $parsed['host'] : '';
+$port = isset($parsed['port']) ? $parsed['port'] : ($scheme === 'https' ? 443 : 80);
+$ssl = $scheme === 'https' ? true : false;//https支持
+define('OPENBMCLAPIURL', ['host' => $host, 'port' => $port, 'ssl' => $ssl]);
+
 run(function(){
     $config = api::getconfig();
     //注册信号处理器、

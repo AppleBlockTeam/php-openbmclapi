@@ -3,6 +3,8 @@ use Swoole\Coroutine;
 use Swoole\Coroutine\Http\Client;
 class socketio {
     private $url;
+    private $port;
+    private $ssl;
     private $token;
     private $client;
     private $data;
@@ -11,13 +13,15 @@ class socketio {
     private $rekeepalive = 1;
     private $Connected = false;
     public function __construct($url=null,$token=null,$kattl=null) {
-        $this->url = $url;
+        $this->url = $url['host'];
+        $this->port = $url['port'];
+        $this->ssl = $url['ssl'];
         $this->token = $token;
         $this->kattl = $kattl;
         $katimeid = 0;
     }
     public function connect() {
-        $this->client = $client = new Client($this->url, 443, true);
+        $this->client = $client = new Client($this->url, $this->port, $this->ssl);
         $ret = $client->upgrade('/socket.io/?EIO=4&transport=websocket');
         $auth = [
             'token' => $this->token
