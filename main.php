@@ -113,8 +113,10 @@ run(function(){
             $httpserver = new fileserver($config['cluster']['host'],$config['cluster']['port'],null,null,$config['cluster']['CLUSTER_SECRET'],false);
             mlog("检测到 byoc 开启并且 use-cert 关闭，请自备反代！");
         }
-        global $httpserver;
-        $httpserver = new fileserver($config['cluster']['host'],$config['cluster']['port'],$config['cluster']['certificates']['cert'],$config['cluster']['certificates']['key'],$config['cluster']['CLUSTER_SECRET'],true);
+        else{
+            global $httpserver;
+            $httpserver = new fileserver($config['cluster']['host'],$config['cluster']['port'],$config['cluster']['certificates']['cert'],$config['cluster']['certificates']['key'],$config['cluster']['CLUSTER_SECRET'],true);
+        }
     }
 
     //获取证书
