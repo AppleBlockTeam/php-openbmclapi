@@ -219,12 +219,11 @@ class download {
             }
             $this->semaphore->push(true);
             go(function () use ($file,$bar) {
-                $client = new Swoole\Coroutine\Http\Client('openbmclapi.bangbang93.com', 443, true);
+                $client = new Swoole\Coroutine\Http\Client(OPENBMCLAPIURL['host'],OPENBMCLAPIURL['port'],OPENBMCLAPIURL['ssl']);
                 $client->set([
                     'timeout' => -1
                 ]);
                 $client->setHeaders([
-                    'Host' => 'openbmclapi.bangbang93.com',
                     'User-Agent' => USERAGENT,
                     'Accept' => '*/*',
                 ]);
