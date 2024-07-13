@@ -9,24 +9,34 @@ class fileserver {
     private $server;
     private $dir;
     private $secret;
+    private $ssl;
     private $lock;
-    public function __construct($host,$port,$cert,$key,$secret) {
+    public function __construct($host,$port,$cert,$key,$secret,$ssl) {
         $this->host = $host;
         $this->port = $port;
         $this->cert = $cert;
         $this->key = $key;
+        $this->ssl = $ssl;
         $this->dir = api::getconfig()['file']['cache_dir'];
         $this->secret = $secret;
         $this->lock = new Swoole\Lock(SWOOLE_RWLOCK);
     }
 
     public function setupserver() {
-        $this->server = $server = new Server($this->host, $this->port, true);
-        $server->set([
-            'ssl_cert_file' => './cert/'.$this->cert,
-            'ssl_key_file' => './cert/'.$this->key,
-            'heartbeat_check_interval' => 60,  // 表示每60秒遍历一次
-        ]);
+        if($this->ssl){
+            $this->server = $server = new Server($this->host, $this->port, true);
+            $server->set([
+                'ssl_cert_file' => $this->cert,
+                'ssl_key_file' => $this->key,
+                'heartbeat_check_interval' => 60,  // 表示每60秒遍历一次
+            ]);
+        }
+        else{
+            $this->server = $server = new Server($this->host, $this->port);
+            $server->set([
+                'heartbeat_check_interval' => 60,  // 表示每60秒遍历一次
+            ]);
+        }
         $server->handle('/', function ($request, $response) {
             $code = 404;
             $response->status($code);

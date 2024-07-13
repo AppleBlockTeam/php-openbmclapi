@@ -7,7 +7,12 @@ $config=[
         "public_port"=> 4000,//服务端口
         "CLUSTER_ID"=> "",
         "CLUSTER_SECRET"=> "",
-        "byoc"=>false,
+        "byoc"=> false,
+        "certificates"=>[ //如果 byoc 关闭，以下设置默认禁用
+            "use-cert"=> false, //是否使用自己的证书
+            "cert"=> "/path/to/cert.crt",
+            "key"=> "/path/to/key.key",
+        ],
     ],
     "file"=> [
         "cache_dir"=> "./cache",//缓存文件夹

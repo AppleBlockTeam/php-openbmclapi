@@ -75,38 +75,50 @@ run(function(){
         $socketio->connect();
     });
     Coroutine::sleep(1);
-    //获取证书
-    $socketio->ack("request-cert");
-    Coroutine::sleep(1);
-    $allcert = $socketio->Getcert();
-    //写入证书并且是否损坏
-    if (!file_exists('./cert/'.$config['cluster']['CLUSTER_ID'].'.crt') && !file_exists('./cert/'.$config['cluster']['CLUSTER_ID'].'.key')) {
-        mlog("正在获取证书");
-        if (!file_exists("./cert")) {
-            mkdir("./cert",0777,true);
+    if (!$config['cluster']['byoc']){
+        $socketio->ack("request-cert");
+        Coroutine::sleep(1);
+        $allcert = $socketio->Getcert();
+        //写入证书并且是否损坏
+        if (!file_exists('./cert/'.$config['cluster']['CLUSTER_ID'].'.crt') && !file_exists('./cert/'.$config['cluster']['CLUSTER_ID'].'.key')) {
+            mlog("正在获取证书");
+            if (!file_exists("./cert")) {
+                mkdir("./cert",0777,true);
+            }
+            mlog("已获取证书,到期时间{$allcert['0']['1']['expires']}");
+            $cert = fopen('./cert/'.$config['cluster']['CLUSTER_ID'].'.crt', 'w');
+            $Writtencert = fwrite($cert, $allcert['0']['1']['cert']);
+            fclose($cert);
+            $cert = fopen('./cert/'.$config['cluster']['CLUSTER_ID'].'.key', 'w');
+            $Writtencert = fwrite($cert, $allcert['0']['1']['key']);
+            fclose($cert);
         }
-        mlog("已获取证书,到期时间{$allcert['0']['1']['expires']}");
-        $cert = fopen('./cert/'.$config['cluster']['CLUSTER_ID'].'.crt', 'w');
-        $Writtencert = fwrite($cert, $allcert['0']['1']['cert']);
-        fclose($cert);
-        $cert = fopen('./cert/'.$config['cluster']['CLUSTER_ID'].'.key', 'w');
-        $Writtencert = fwrite($cert, $allcert['0']['1']['key']);
-        fclose($cert);
+        $crt = file_get_contents('./cert/'.$config['cluster']['CLUSTER_ID'].'.crt');
+        if ($crt!== $allcert['0']['1']['cert']) {
+            mlog("证书损坏/过期");
+            mlog("已获取新的证书,到期时间{$allcert['0']['1']['expires']}");
+            $cert = fopen('./cert/'.$config['cluster']['CLUSTER_ID'].'.crt', 'w');
+            $Writtencert = fwrite($cert, $allcert['0']['1']['cert']);
+            fclose($cert);
+            $cert = fopen('./cert/'.$config['cluster']['CLUSTER_ID'].'.key', 'w');
+            $Writtencert = fwrite($cert, $allcert['0']['1']['key']);
+            fclose($cert);
+            global $httpserver;
+            $httpserver = new fileserver($config['cluster']['host'],$config['cluster']['port'],'./cert/'.$config['cluster']['CLUSTER_ID'].'.crt','./cert/'.$config['cluster']['CLUSTER_ID'].'.key',$config['cluster']['CLUSTER_SECRET'],true);
+        }
     }
-    $crt = file_get_contents('./cert/'.$config['cluster']['CLUSTER_ID'].'.crt');
-    if ($crt!== $allcert['0']['1']['cert']) {
-        mlog("证书损坏/过期");
-        mlog("已获取新的证书,到期时间{$allcert['0']['1']['expires']}");
-        $cert = fopen('./cert/'.$config['cluster']['CLUSTER_ID'].'.crt', 'w');
-        $Writtencert = fwrite($cert, $allcert['0']['1']['cert']);
-        fclose($cert);
-        $cert = fopen('./cert/'.$config['cluster']['CLUSTER_ID'].'.key', 'w');
-        $Writtencert = fwrite($cert, $allcert['0']['1']['key']);
-        fclose($cert);
+    else{
+        if(!$config['cluster']['certificates']['use-cert']){
+            global $httpserver;
+            $httpserver = new fileserver($config['cluster']['host'],$config['cluster']['port'],null,null,$config['cluster']['CLUSTER_SECRET'],false);
+            mlog("检测到 byoc 开启并且 use-cert 关闭，请自备反代！");
+        }
+        global $httpserver;
+        $httpserver = new fileserver($config['cluster']['host'],$config['cluster']['port'],$config['cluster']['certificates']['cert'],$config['cluster']['certificates']['key'],$config['cluster']['CLUSTER_SECRET'],true);
     }
+
+    //获取证书
     //设置http服务器
-    global $httpserver;
-    $httpserver = new fileserver($config['cluster']['host'],$config['cluster']['port'],$config['cluster']['CLUSTER_ID'].'.crt',$config['cluster']['CLUSTER_ID'].'.key',$config['cluster']['CLUSTER_SECRET']);
     $server = $httpserver->setupserver();
 
     //开始加载插件
