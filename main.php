@@ -103,9 +103,9 @@ run(function(){
             $cert = fopen('./cert/'.$config['cluster']['CLUSTER_ID'].'.key', 'w');
             $Writtencert = fwrite($cert, $allcert['0']['1']['key']);
             fclose($cert);
-            global $httpserver;
-            $httpserver = new fileserver($config['cluster']['host'],$config['cluster']['port'],'./cert/'.$config['cluster']['CLUSTER_ID'].'.crt','./cert/'.$config['cluster']['CLUSTER_ID'].'.key',$config['cluster']['CLUSTER_SECRET'],true);
         }
+        global $httpserver;
+        $httpserver = new fileserver($config['cluster']['host'],$config['cluster']['port'],'./cert/'.$config['cluster']['CLUSTER_ID'].'.crt','./cert/'.$config['cluster']['CLUSTER_ID'].'.key',$config['cluster']['CLUSTER_SECRET'],true);
     }
     else{
         if(!$config['cluster']['certificates']['use-cert']){
