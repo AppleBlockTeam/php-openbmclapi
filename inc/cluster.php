@@ -245,21 +245,20 @@ class download {
 
     public function downloadnopoen($hash) {
         $download_dir = api::getconfig()['file']['cache_dir'];
-        global $tokendata;
+        $tokenapi = api::getinfo();
         $filePath = $download_dir . '/' . substr($hash, 0, 2) . '/';
         if (!file_exists($filePath)) {
             mkdir($filePath, 0777, true);
         }
         $filepath = "/openbmclapi/download/{$hash}?noopen=1";
-        $client = new Swoole\Coroutine\Http\Client('openbmclapi.bangbang93.com', 443, true);
+        $client = new Swoole\Coroutine\Http\Client(OPENBMCLAPIURL['host'],OPENBMCLAPIURL['port'],OPENBMCLAPIURL['ssl']);
         $client->set([
             'timeout' => -1
         ]);
         $client->setHeaders([
-            'Host' => 'openbmclapi.bangbang93.com',
             'User-Agent' => USERAGENT,
             'Accept' => '*/*',
-            'Authorization' => "Bearer {$tokendata['token']}"
+            'Authorization' => "Bearer {$tokenapi['token']}"
         ]);
         $downloader = $client->download($filepath,$download_dir.'/'.substr($hash, 0, 2).'/'.$hash);
         if (!$downloader) {

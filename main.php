@@ -20,7 +20,7 @@ $parsed = parse_url(api::getconfig()['advanced']['Centerurl']);
 $scheme = isset($parsed['scheme']) ? $parsed['scheme'] : '';
 $host = isset($parsed['host']) ? $parsed['host'] : '';
 $port = isset($parsed['port']) ? $parsed['port'] : ($scheme === 'https' ? 443 : 80);
-$ssl = $scheme === 'https' ? true : false;//https支持
+$ssl = $scheme === 'https' ? true : false; //https支持
 define('OPENBMCLAPIURL', ['host' => $host, 'port' => $port, 'ssl' => $ssl]);
 
 run(function(){
@@ -58,10 +58,16 @@ run(function(){
     $tokendata = $token->gettoken();
     mlog("GetToken:".$tokendata['token'],1);
     mlog("TokenTTL:".$tokendata['upttl'],1);
+    $tokenapi = api::getinfo();
+    $tokenapi['token'] = $tokendata['token'];
+    api::getinfo($tokenapi);
+
     //启动更新TokenTimer
-    global $tokentimerid;
     $tokentimerid = Swoole\Timer::tick($tokendata['upttl'], function () use ($token) {
-        $tokendata = $token->gettoken();
+        $tokenapi = api::getinfo();
+        $tokendata = $token->refreshToken($tokenapi['token']);
+        $tokenapi['token'] = $tokendata['token'];
+        api::getinfo($tokenapi);
         mlog("GetNewToken:".$tokendata['token'],1);
     });
     registerSigintHandler();

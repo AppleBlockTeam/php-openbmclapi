@@ -38,4 +38,22 @@ class token{
             'upttl' => $responseData['ttl'] - 600000,//前十分钟更新
         );
     }
+
+    public function refreshToken($token) {
+        //刷新token
+        $client = new Client(OPENBMCLAPIURL['host'],OPENBMCLAPIURL['port'],OPENBMCLAPIURL['ssl']);
+        $client->post(
+            '/openbmclapi-agent/token',
+            array(
+                'clusterId' => $this->clusterId,
+                'token' => $token,
+            )
+        );
+        $client->close();
+        $responseData = json_decode($client->body, true);
+        return array(
+            'token' => $responseData["token"],
+            'upttl' => $responseData['ttl'] - 600000,//前十分钟更新
+        );
+    }
 }
