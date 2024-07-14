@@ -117,7 +117,7 @@ run(function(){
         if(!$config['cluster']['certificates']['use-cert']){
             global $httpserver;
             $httpserver = new fileserver($config['cluster']['host'],$config['cluster']['port'],null,null,$config['cluster']['CLUSTER_SECRET'],false);
-            mlog("检测到 byoc 开启并且 use-cert 关闭，请自备反代！");
+            mlog("byoc 已开启并且 use-cert 已关闭，请自备反代！");
         }
         else{
             global $httpserver;
