@@ -3,20 +3,25 @@ use Swoole\Coroutine;
 use Swoole\Coroutine\Http\Client;
 class socketio {
     private $url;
+    private $port;
+    private $ssl;
     private $token;
     private $client;
     private $data;
     private $certdata;
     private $kattl;
+    private $rekeepalive = 1;
     private $Connected = false;
-    public function __construct($url,$token,$kattl) {
-        $this->url = $url;
+    public function __construct($url=null,$token=null,$kattl=null) {
+        $this->url = $url['host'];
+        $this->port = $url['port'];
+        $this->ssl = $url['ssl'];
         $this->token = $token;
         $this->kattl = $kattl;
         $katimeid = 0;
     }
     public function connect() {
-        $this->client = $client = new Client($this->url, 443, true);
+        $this->client = $client = new Client($this->url, $this->port, $this->ssl);
         $ret = $client->upgrade('/socket.io/?EIO=4&transport=websocket');
         $auth = [
             'token' => $this->token
@@ -24,9 +29,13 @@ class socketio {
         if ($ret) {
             $client->push('40'.json_encode($auth));
         }
-
         while(true) {
-            $alldata = $client->recv(1);
+            $alldata = $client->recv();
+            if (empty($alldata)) {
+                $client->close();
+                mlog("与主控的连接断开");
+                break;
+            }
             if (!is_bool($alldata)){
             $this->data = $data = $alldata->data;
             preg_match('/^\d+/', $data, $code);
@@ -42,7 +51,13 @@ class socketio {
             }
             if ($code[0] == '42'){
                 $data = substr($data, strlen($code[0]));
-                mlog("[socket.io]Got data {$data}");
+                $jsondata = json_decode($data);
+                if(isset($jsondata[0])){
+                    mlog("{$jsondata[1]}");
+                }
+                else{
+                    mlog("[socket.io]{$data}");
+                }
             }
             if ($code[0] == '2'){
                 $client->push('3');
@@ -50,9 +65,9 @@ class socketio {
             }
             if ($code[0] == '41'){
                 mlog("[socket.io]Close Connection");
-                exits();
                 $client->close();
-                return;
+                exits();
+                break;
             }
             if ($code[0] == '430'){
                 $jsondata = json_decode(substr($data, strlen($code[0])),true);
@@ -60,37 +75,64 @@ class socketio {
                     $this->certdata = $jsondata;
                 }
                 elseif (isset($jsondata[0][1]) && $jsondata[0][1] == "1"){
-                    global $enable;
-                    $enable = true;
-                    mlog("节点已启用 Let's Goooooo!");
-                    global $kacounters;
-                    $kacounters = new Swoole\Table(1024);
-                    $kacounters->column('hits', Swoole\Table::TYPE_FLOAT);
-                    $kacounters->column('bytes', Swoole\Table::TYPE_FLOAT);
-                    $kacounters->create();
-                    $kacounters->set('1', ['hits' => 0, 'bytes' => 0]);
-                    global $katimeid;
-                    $katimeid = Swoole\Timer::tick($this->kattl*1000, function () use ($kacounters) {
-                        $this->keepalive($kacounters);
-                    });
+                    $enable = api::getinfo();
+                    if(!$enable['enable']){
+                        $enable = api::getinfo();
+                        $enable['enable'] = true;
+                        api::getinfo($enable);
+                        mlog("节点已启用 Let's Goooooo!");
+                        global $kacounters;
+                        $kacounters = new Swoole\Table(1024);
+                        $kacounters->column('hits', Swoole\Table::TYPE_FLOAT);
+                        $kacounters->column('bytes', Swoole\Table::TYPE_FLOAT);
+                        $kacounters->create();
+                        $kacounters->set('1', ['hits' => 0, 'bytes' => 0]);
+                        global $katimeid;
+                        $katimeid = Swoole\Timer::tick($this->kattl*1000, function () use ($kacounters) {
+                            $this->keepalive($kacounters);
+                        });
+
+                        global $dbcounters;
+                        $dbcounters = new Swoole\Table(1024);
+                        $dbcounters->column('hits', Swoole\Table::TYPE_FLOAT);
+                        $dbcounters->column('bytes', Swoole\Table::TYPE_FLOAT);
+                        $dbcounters->create();
+                        $dbcounters->set('1', ['hits' => 0, 'bytes' => 0]);
+                        $dbtimeid = Swoole\Timer::tick(3000, function () use ($dbcounters) {
+                            $this->updatedatabase($dbcounters);
+                        });
+                    }
+                    else{
+                        $client->close();
+                        break;
+                        mlog("[socket.io]Close Connection");
+                    }
                 }
                 elseif (isset($jsondata[0][1]) && $jsondata[0][1] == "0"){
-                    mlog("[socket.io]节点已掉线");
-                    exits();
+                    if($this->rekeepalive <= 3){
+                        mlog("Keep-Alive失败,正在重试({$this->rekeepalive}/3)");
+                        global $kadata;
+                        $this->ack("keep-alive",$kadata);
+                        $this->rekeepalive++;
+                    }
+                    else{
+                        exits();
+                    }
                 }
                 elseif (isset($jsondata[0][1]) && $this->IsTime($jsondata[0][1])){
+                    $this->rekeepalive = 1;
                     global $kadata;
                     mlog(" Keep-alive success: hits={$kadata['hits']} bytes={$kadata['bytes']} Time={$jsondata[0][1]}");
                 }
                 elseif (isset($jsondata[0][0]["message"])){
-                    mlog("[socket.io]Got data {$jsondata[0][0]["message"]}");
+                    mlog("[socket.io]{$jsondata[0][0]["message"]}");
                     if (strpos($jsondata[0][0]["message"], "Error") !== false) {
-                        mlog("[socket.io]节点启用失败");
+                        mlog("节点启用失败",2);
                         exits();
                     }
                 }
                 else {
-                   mlog("[socket.io]Got data {$data}");
+                    mlog("[socket.io]Got data {$data}");
                 };
                 //mlog("[socket.io]Got MESSAGE {$data}",1);
             }
@@ -105,17 +147,6 @@ class socketio {
             }
             //var_dump($data);
         }
-        global $shouldExit;
-        global $httpserver;
-            if ($shouldExit) {
-                global $enable;
-                if($enable){
-                    Swoole\Timer::clear($katimeid);
-                }
-                $this->disable();
-                $httpserver->stopserver();
-                return;
-            }
     }
     }
     public function Getcert() {
@@ -180,18 +211,22 @@ class socketio {
         $kacounters->set('1', ['hits' => 0, 'bytes' => 0]);
     }
 
+    public function updatedatabase($dbcounters) {
+        $database = new database();
+        $database->writeDatabase($dbcounters->get('1','hits'),$dbcounters->get('1','bytes'));
+        $dbcounters->set('1', ['hits' => 0, 'bytes' => 0]);
+    }
     public function IsTime($inputString) {
         $pattern = '/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/';
         return preg_match($pattern, $inputString) === 1;
     }
 
     public function disable() {
-        global $enable;
+        $enable = api::getinfo()['enable'];
         if ($enable){
             $this->ack("disable");
-            Coroutine::sleep(2);
         }
-        mlog("[socket.io]Close Connection");
         $this->client->close();
+        $this->Connected = false;
     }
 }

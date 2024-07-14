@@ -83,27 +83,25 @@ class cluster{
         $this->version = $version;
     }
     public function getFileList() {
-        global $DOWNLOAD_DIR;
-        if (!file_exists($DOWNLOAD_DIR."/filecache")) {
-            mkdir($DOWNLOAD_DIR."/filecache",0777,true);
+        $download_dir = api::getconfig()['file']['cache_dir'];
+        if (!file_exists($download_dir."/filecache")) {
+            mkdir($download_dir."/filecache",0777,true);
         }
-        $client = new Client(OPENBMCLAPIURL,443,true);
+        $client = new Client(OPENBMCLAPIURL['host'],OPENBMCLAPIURL['port'],OPENBMCLAPIURL['ssl']);
         $client->set(['timeout' => -1]);
         $client->setHeaders([
-            'Host' => OPENBMCLAPIURL,
             'User-Agent' => 'openbmclapi-cluster/'.$this->version,
             'Accept' => '*',
             'Authorization' => "Bearer {$this->token}"
         ]);
-        mlog("Start FileList Download");
-        if (!$client->download('/openbmclapi/files',$DOWNLOAD_DIR.'/filecache/filelist.zstd')) {
-            mlog("FileList Download Failed",2);
+        mlog("Starting to download fileList");
+        if (!$client->get('/openbmclapi/files')) {
+            mlog("Failed to download fileList",2);
             $client->close();
         }
         else{
-            mlog("FileList Download Success");
+            $this->compressedData = zstd_uncompress($client->body);
             $client->close();
-            $this->compressedData = file_get_contents("compress.zstd://".$DOWNLOAD_DIR."/filecache/filelist.zstd");
         }
         $parser = new ParseFileList($this->compressedData);
         $files = $parser->parse();
@@ -123,14 +121,14 @@ class download {
     }
 
     private function downloader(Swoole\Coroutine\Http\Client $client, $file,$bar) {
-        global $DOWNLOAD_DIR;
-        $filePath = $DOWNLOAD_DIR . '/' . substr($file->hash, 0, 2) . '/';
+        $download_dir = api::getconfig()['file']['cache_dir'];
+        $filePath = $download_dir . '/' . substr($file->hash, 0, 2) . '/';
         if (!file_exists($filePath)) {
             mkdir($filePath, 0777, true);
         }
         $savePath = $filePath . $file->hash;
         $file->path = str_replace(' ', '%20', $file->path);
-        $downloader = $client->download($file->path,$DOWNLOAD_DIR.'/'.substr($file->hash, 0, 2).'/'.$file->hash);
+        $downloader = $client->download($file->path,$download_dir.'/'.substr($file->hash, 0, 2).'/'.$file->hash);
         if (!$downloader) {
             mlog("Error connecting to the main control:{$client->errMsg}",2);
             return false;
@@ -152,7 +150,7 @@ class download {
                     'User-Agent' => USERAGENT,
                     'Accept' => '*/*',
                 ]);
-                $downloader = $client->download($location_url['path'].'?'.($location_url['query']??''),$DOWNLOAD_DIR.'/'.substr($file->hash, 0, 2).'/'.$file->hash);
+                $downloader = $client->download($location_url['path'].'?'.($location_url['query']??''),$download_dir.'/'.substr($file->hash, 0, 2).'/'.$file->hash);
             if (in_array($client->statusCode, [301, 302])) {
                 while(in_array($client->statusCode, [301, 302])){
                     $location_url = parse_url($client->getHeaders()['location']);
@@ -169,7 +167,7 @@ class download {
                         'User-Agent' => USERAGENT,
                         'Accept' => '*/*',
                     ]);
-                    $downloader = $client->download($location_url['path'].'?'.($location_url['query']??''),$DOWNLOAD_DIR.'/'.substr($file->hash, 0, 2).'/'.$file->hash);
+                    $downloader = $client->download($location_url['path'].'?'.($location_url['query']??''),$download_dir.'/'.substr($file->hash, 0, 2).'/'.$file->hash);
                 }
                 if (!$downloader) {
                     echo PHP_EOL;
@@ -192,7 +190,7 @@ class download {
                 }
                 elseif($client->statusCode >= 400){
                     echo PHP_EOL;
-                    mlog("Download Failed:{$client->statusCode} | {$file->path} | {$location_url['host']}:{$location_url['port']}",2);
+                    mlog("{$file->path} Download Failed: {$client->statusCode} | {$location_url['host']}:{$location_url['port']}",2);
                     $bar->progress();
                     return false;
                 }
@@ -212,7 +210,7 @@ class download {
 
     public function downloadFiles() {
         $bar = new CliProgressBar(count($this->filesList));
-        $bar->setDetails("[Downloader]");
+        $bar->setDetails("[Downloader][线程数:{$this->maxConcurrent}]");
         $bar->display();
         foreach ($this->filesList as $file) {
             global $shouldExit;
@@ -221,12 +219,11 @@ class download {
             }
             $this->semaphore->push(true);
             go(function () use ($file,$bar) {
-                $client = new Swoole\Coroutine\Http\Client('openbmclapi.bangbang93.com', 443, true);
+                $client = new Swoole\Coroutine\Http\Client(OPENBMCLAPIURL['host'],OPENBMCLAPIURL['port'],OPENBMCLAPIURL['ssl']);
                 $client->set([
                     'timeout' => -1
                 ]);
                 $client->setHeaders([
-                    'Host' => 'openbmclapi.bangbang93.com',
                     'User-Agent' => USERAGENT,
                     'Accept' => '*/*',
                 ]);
@@ -247,24 +244,23 @@ class download {
     }
 
     public function downloadnopoen($hash) {
-        global $DOWNLOAD_DIR;
-        global $tokendata;
-        $filePath = $DOWNLOAD_DIR . '/' . substr($hash, 0, 2) . '/';
+        $download_dir = api::getconfig()['file']['cache_dir'];
+        $tokenapi = api::getinfo();
+        $filePath = $download_dir . '/' . substr($hash, 0, 2) . '/';
         if (!file_exists($filePath)) {
             mkdir($filePath, 0777, true);
         }
         $filepath = "/openbmclapi/download/{$hash}?noopen=1";
-        $client = new Swoole\Coroutine\Http\Client('openbmclapi.bangbang93.com', 443, true);
+        $client = new Swoole\Coroutine\Http\Client(OPENBMCLAPIURL['host'],OPENBMCLAPIURL['port'],OPENBMCLAPIURL['ssl']);
         $client->set([
             'timeout' => -1
         ]);
         $client->setHeaders([
-            'Host' => 'openbmclapi.bangbang93.com',
             'User-Agent' => USERAGENT,
             'Accept' => '*/*',
-            'Authorization' => "Bearer {$tokendata['token']}"
+            'Authorization' => "Bearer {$tokenapi['token']}"
         ]);
-        $downloader = $client->download($filepath,$DOWNLOAD_DIR.'/'.substr($hash, 0, 2).'/'.$hash);
+        $downloader = $client->download($filepath,$download_dir.'/'.substr($hash, 0, 2).'/'.$hash);
         if (!$downloader) {
             mlog("Error download to the main control:{$client->errMsg}",2);
             return false;
@@ -291,14 +287,14 @@ class FilesCheck {
         $bar = new CliProgressBar(count($this->filesList));
         $bar->setDetails("[FileCheck]");
         $bar->display();
+        $download_dir = api::getconfig()['file']['cache_dir'];
         foreach ($this->filesList as $file) {
             global $shouldExit;
-            global $DOWNLOAD_DIR;
             if ($shouldExit) {
                 return;
                 break;
             }
-            if (!file_exists($DOWNLOAD_DIR.'/'.substr($file->hash, 0, 2).'/'.$file->hash)){
+            if (!file_exists($download_dir.'/'.substr($file->hash, 0, 2).'/'.$file->hash)){
                 $this->Missfile[] = new BMCLAPIFile(
                     $file->path,
                     $file->hash,
@@ -307,7 +303,7 @@ class FilesCheck {
                 );
             }
             else{
-                if (hash_file('sha1',$DOWNLOAD_DIR.'/'.substr($file->hash, 0, 2).'/'.$file->hash) != $file->hash) {
+                if (hash_file('sha1',$download_dir.'/'.substr($file->hash, 0, 2).'/'.$file->hash) != $file->hash) {
                     $this->Missfile[] = new BMCLAPIFile(
                         $file->path,
                         $file->hash,
@@ -328,14 +324,14 @@ class FilesCheck {
         $bar = new CliProgressBar(count($this->filesList));
         $bar->setDetails("[FileCheck]");
         $bar->display();
+        $download_dir = api::getconfig()['file']['cache_dir'];
         foreach ($this->filesList as $file) {
             global $shouldExit;
-            global $DOWNLOAD_DIR;
             if ($shouldExit) {
                 return;
                 break;
             }
-            if (!file_exists($DOWNLOAD_DIR.'/'.substr($file->hash, 0, 2).'/'.$file->hash)){
+            if (!file_exists($download_dir.'/'.substr($file->hash, 0, 2).'/'.$file->hash)){
                 $this->Missfile[] = new BMCLAPIFile(
                     $file->path,
                     $file->hash,
@@ -344,7 +340,7 @@ class FilesCheck {
                 );
             }
             else{
-                if (filesize($DOWNLOAD_DIR.'/'.substr($file->hash, 0, 2).'/'.$file->hash) != $file->size) {
+                if (filesize($download_dir.'/'.substr($file->hash, 0, 2).'/'.$file->hash) != $file->size) {
                     $this->Missfile[] = new BMCLAPIFile(
                         $file->path,
                         $file->hash,
@@ -365,14 +361,14 @@ class FilesCheck {
         $bar = new CliProgressBar(count($this->filesList));
         $bar->setDetails("[FileCheck]");
         $bar->display();
+        $download_dir = api::getconfig()['file']['cache_dir'];
         foreach ($this->filesList as $file) {
             global $shouldExit;
-            global $DOWNLOAD_DIR;
             if ($shouldExit) {
                 return;
                 break;
             }
-            if (!file_exists($DOWNLOAD_DIR.'/'.substr($file->hash, 0, 2).'/'.$file->hash)){
+            if (!file_exists($download_dir.'/'.substr($file->hash, 0, 2).'/'.$file->hash)){
                 $this->Missfile[] = new BMCLAPIFile(
                     $file->path,
                     $file->hash,
