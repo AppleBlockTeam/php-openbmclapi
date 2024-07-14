@@ -124,8 +124,8 @@ class download {
             mkdir($filePath, 0777, true);
         }
         $savePath = $filePath . $file->hash;
-        $file->path = str_replace(' ', '%20', $file->path);
-        $downloader = $client->download($file->path,$download_dir.'/'.substr($file->hash, 0, 2).'/'.$file->hash);
+        $file->path = $this->customUrlEncode($file->path);
+        $downloader = $client->download($file->path,$filePath.$savePath);
         if (!$downloader) {
             mlog("Error connecting to the main control:{$client->errMsg}",2);
             return false;
@@ -136,9 +136,14 @@ class download {
         }
         else {
             if(isset($client->getHeaders()['location'])){
-            $location_url = parse_url($client->getHeaders()['location']);
             $client->close();
-            $client = new Swoole\Coroutine\Http\Client($location_url['host'], $location_url['port'], true);
+
+            //预处理下载连接
+            $location_url = parse_url($client->getHeaders()['location']);
+            $scheme = isset($location_url['scheme']) ? $location_url['scheme'] : '';
+            $ssl = $scheme === 'https' ? true : false;
+
+            $client = new Swoole\Coroutine\Http\Client($location_url['host'], $location_url['port'], $ssl);
                 $client->set([
                     'timeout' => 60
                 ]);
@@ -147,7 +152,7 @@ class download {
                     'User-Agent' => USERAGENT,
                     'Accept' => '*/*',
                 ]);
-                $downloader = $client->download($location_url['path'].'?'.($location_url['query']??''),$download_dir.'/'.substr($file->hash, 0, 2).'/'.$file->hash);
+                $downloader = $client->download($location_url['path'].'?'.($location_url['query']??''),$savePath);
             if (in_array($client->statusCode, [301, 302])) {
                 while(in_array($client->statusCode, [301, 302])){
                     $location_url = parse_url($client->getHeaders()['location']);
@@ -164,7 +169,7 @@ class download {
                         'User-Agent' => USERAGENT,
                         'Accept' => '*/*',
                     ]);
-                    $downloader = $client->download($location_url['path'].'?'.($location_url['query']??''),$download_dir.'/'.substr($file->hash, 0, 2).'/'.$file->hash);
+                    $downloader = $client->download($location_url['path'].'?'.($location_url['query']??''),$savePath);
                 }
                 if (!$downloader) {
                     echo PHP_EOL;
@@ -268,6 +273,19 @@ class download {
         else{
             return false;
         }
+    }
+
+    public function customUrlEncode($url) {
+        // 分割URL并保留斜杠
+        $parts = preg_split('/(\/)/', $url, -1, PREG_SPLIT_DELIM_CAPTURE);
+    
+        foreach ($parts as &$part) {
+            if ($part !== '/') {
+                $part = rawurlencode($part);
+            }
+        }
+    
+        return implode('', $parts);
     }
 }
 
