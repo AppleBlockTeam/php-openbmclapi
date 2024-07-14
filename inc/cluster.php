@@ -84,9 +84,6 @@ class cluster{
     }
     public function getFileList() {
         $download_dir = api::getconfig()['file']['cache_dir'];
-        if (!file_exists($download_dir."/filecache")) {
-            mkdir($download_dir."/filecache",0777,true);
-        }
         $client = new Client(OPENBMCLAPIURL['host'],OPENBMCLAPIURL['port'],OPENBMCLAPIURL['ssl']);
         $client->set(['timeout' => -1]);
         $client->setHeaders([
