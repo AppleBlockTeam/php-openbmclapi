@@ -125,7 +125,7 @@ class download {
         }
         $savePath = $filePath . $file->hash;
         $file->path = $this->customUrlEncode($file->path);
-        $downloader = $client->download($file->path,$filePath.$savePath);
+        $downloader = $client->download($file->path,$savePath);
         if (!$downloader) {
             mlog("Error connecting to the main control:{$client->errMsg}",2);
             return false;
