@@ -226,7 +226,6 @@ class socketio {
         if ($enable){
             $this->ack("disable");
         }
-        $this->client->close();
         $this->Connected = false;
     }
 }
