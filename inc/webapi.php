@@ -50,25 +50,28 @@ class webapi{
         $todayData = @file_get_contents($dirPath . '/' . date('Ymd'));
         $dataArrayToday = json_decode($todayData, true);
         if (json_last_error() !== JSON_ERROR_NONE) {
-            echo "Error decoding today's JSON: " . json_last_error_msg();
+            mlog("Error decoding today's JSON: " . json_last_error_msg(),2);
             return [];
         }
         
         // 如果需要包含昨天的数据
         $yesterdayKey = date('Ymd', strtotime('-1 day'));
-        if (strtotime(date('Y-m-d')) !== strtotime($yesterdayKey)) { // 确保昨天的日期正确
-            echo $yesterdayKey;
+        if (strtotime(date('Y-m-d')) !== strtotime($yesterdayKey)) {
+            if (!file_exists($dirPath . '/' . $yesterdayKey)) {
+                $database = new Database;
+                $database->initializeDatabase(true);
+            }
             $yesterdayData = @file_get_contents($dirPath . '/' . $yesterdayKey);
             $dataArrayYesterday = json_decode($yesterdayData, true);
             if (json_last_error() !== JSON_ERROR_NONE) {
-                echo "Error decoding yesterday's JSON: " . json_last_error_msg();
+                mlog("Error decoding yesterday's JSON: " . json_last_error_msg(),2);
                 return [];
             }
             $dataArray = array_replace($dataArrayYesterday, $dataArrayToday);
         } else {
             $dataArray = $dataArrayToday;
         }
-    
+
         // 统一处理数据
         foreach ($dataArray as $key => $value) {
             $dateStr = substr($key, 0, 8);

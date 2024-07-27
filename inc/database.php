@@ -10,20 +10,24 @@ class Database {
         }
     }
 
-    public function initializeDatabase() {
-        $filename = $this->dirPath . '/' . date('Ymd');
+    public function initializeDatabase($useYesterday = false) {
+        $date = $useYesterday ? date('Ymd', strtotime('-1 day')) : date('Ymd');
+        $filename = $this->dirPath . '/' . $date;
+        
         if (!is_dir($this->dirPath)) {
             mkdir($this->dirPath, 0777, true);
         }
+        
         if (!file_exists($filename)) {
             $initialData = [];
             for ($hour = 0; $hour < 24; ++$hour) {
-                $timeKey = date('Ymd') . str_pad($hour, 2, '0', STR_PAD_LEFT);
+                $timeKey = $date . str_pad($hour, 2, '0', STR_PAD_LEFT);
                 $initialData[$timeKey] = ['hits' => 0, 'bytes' => 0];
             }
             file_put_contents($filename, json_encode($initialData, JSON_PRETTY_PRINT));
         }
     }
+    
 
     public function writeDatabase($hits, $bytes) {
         $filename = $this->dirPath . '/' . date('Ymd');
@@ -79,7 +83,7 @@ class Database {
             $filename = $this->dirPath . '/' . $dateStr;
             
             if (file_exists($filename)) {
-                $data = json_decode(file_get_contents($filename), true); // 使用file_get_contents以兼容更多环境
+                $data = json_decode(file_get_contents($filename), true);
                 
                 foreach ($data as $hourlyRecord) {
                     if (isset($hourlyRecord['hits']) && isset($hourlyRecord['bytes'])) {

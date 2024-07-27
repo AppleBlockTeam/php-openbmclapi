@@ -117,6 +117,7 @@ class socketio {
                     }
                     else{
                         exits();
+                        break;
                     }
                 }
                 elseif (isset($jsondata[0][1]) && $this->IsTime($jsondata[0][1])){
@@ -129,6 +130,7 @@ class socketio {
                     if (strpos($jsondata[0][0]["message"], "Error") !== false) {
                         mlog("节点启用失败",2);
                         exits();
+                        break;
                     }
                 }
                 else {
