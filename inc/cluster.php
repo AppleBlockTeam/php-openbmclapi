@@ -2,6 +2,7 @@
 require_once('./vendor/autoload.php');
 use Swoole\Coroutine;
 use Swoole\Coroutine\Http\Client;
+use Swoole\Coroutine\Channel;
 use Dariuszp\CliProgressBar;
 
 
@@ -37,23 +38,50 @@ class ParseFileList {
         $bar->setDetails("[ParseFileList]");
         $bar->display();
 
-        for ($i = 0; $i < $totalFiles; $i++) {
-            global $shouldExit;
-            if ($shouldExit) {
+        $channel = new Channel(4); // 创建四个 channel ，不够可以拉满
+
+        go(function () use ($totalFiles, $memoryStream, $channel, $bar) {
+            for ($i = 0; $i < $totalFiles; $i++) {
+                global $shouldExit;
+                if ($shouldExit) {
+                    break;
+                }
+                $fileData = [
+                    $this->readString($memoryStream),
+                    $this->readString($memoryStream),
+                    $this->readLong($memoryStream),
+                    $this->readLong($memoryStream)
+                ];
+                $channel->push($fileData);
+
+                if ($i % 100 == 0) { // 更新频率
+                    $bar->progress(100);
+                }
+            }
+            $channel->push(false); // 标记完成
+        });
+
+        $this->files = $this->processFiles($channel);
+        
+        fclose($memoryStream);
+        $bar->end();
+
+        return $this->files;
+    }
+
+    private function processFiles($channel) {
+        $files = [];
+
+        while (true) {
+            $fileData = $channel->pop();
+            if ($fileData === false) {
                 break;
             }
-            $this->files[] = new BMCLAPIFile(
-                $this->readString($memoryStream),
-                $this->readString($memoryStream),
-                $this->readLong($memoryStream),
-                $this->readLong($memoryStream)
-            );
-            $bar->progress();
+
+            $files[] = new BMCLAPIFile($fileData[0], $fileData[1], $fileData[2], $fileData[3]);
         }
-        fclose($memoryStream);
-        $bar->display();
-        $bar->end();
-        return $this->files;
+
+        return $files;
     }
 
     private function readLong($memoryStream) {
