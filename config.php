@@ -15,9 +15,17 @@ $config=[
         ],
     ],
     "file"=> [
-        "cache_dir"=> "./cache",//缓存文件夹
+        "cache_dir"=> "./cache",//缓存路径
         "check"=> "size",//检查文件策略(hash:检查文件hash size:检查文件大小 exists:检查文件是否存在)
         "database_dir"=> "./database",//访问数据数据库目录
+        "webdav"=>[
+            "support"=> false,//webdav 支持,开启后自动关闭本地模式
+            "url"=> "http://114514.com:1145/",
+            "endpoint"=> "/dav/download",
+            "username"=> "114514",
+            "password"=> "114514",
+            "MaxConcurrent"=> 60,//同步使用的线程
+        ]
     ],
     "advanced"=> [
         "Centerurl"=> "https://openbmclapi.staging.bangbang93.com",//主控链接(不建议调整)

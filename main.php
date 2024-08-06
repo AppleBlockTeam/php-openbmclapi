@@ -80,6 +80,7 @@ run(function(){
     Coroutine::create(function () use (&$socketio){
         $socketio->connect();
     });
+    //获取证书
     Coroutine::sleep(1);
     if (!$config['cluster']['byoc']){
         $socketio->ack("request-cert");
@@ -125,9 +126,16 @@ run(function(){
         }
     }
 
-    //获取证书
     //设置http服务器
     $server = $httpserver->setupserver();
+
+
+    //判断是否开启webdav
+    if(api::getconfig()['file']['webdav']['support']){
+        $webdav = new webdav();
+        $httpserver->setupserver302();
+    }
+
 
     //开始加载插件
     $pluginsManager = new PluginsManager();
@@ -144,16 +152,9 @@ run(function(){
     //下载文件列表
     $cluster = new cluster($tokendata['token'],VERSION);
     $files = $cluster->getFileList();
-    $FilesCheck = new FilesCheck($files);
-    if ($config['file']['check'] == "hash"){
-        $Missfile = $FilesCheck->FilesCheckerhash();
-    }
-    elseif($config['file']['check'] == "size"){
-        $Missfile = $FilesCheck->FilesCheckersize();
-    }
-    elseif($config['file']['check'] == "exists"){
-        $Missfile = $FilesCheck->FilesCheckerexists();
-    }
+
+    //开始检查文件
+    $Missfile = $cluster->FilesCheck($files,api::getconfig()['file']['webdav']['MaxConcurrent']);
     $isSynchronized = api::getinfo();
     $isSynchronized['isSynchronized'] = true;
     api::getinfo($isSynchronized);
@@ -161,18 +162,10 @@ run(function(){
     if (is_array($Missfile)){
         mlog("缺失/损坏".count($Missfile)."个文件");
         while(is_array($Missfile)){
+            print_r($Missfile);
             $download = new download($Missfile,$config['advanced']['MaxConcurrent']);
             $download->downloadFiles();
-            $FilesCheck = new FilesCheck($Missfile);
-            if ($config['file']['check'] == "hash"){
-                $Missfile = $FilesCheck->FilesCheckerhash();
-            }
-            elseif($config['file']['check'] == "size"){
-                $Missfile = $FilesCheck->FilesCheckersize();
-            }
-            elseif($config['file']['check'] == "exists"){
-                $Missfile = $FilesCheck->FilesCheckerexists();
-            }
+            $Missfile = $cluster->FilesCheck($Missfile);
             if (is_array($Missfile)){
                 //mlog("缺失/损坏".count($Missfile)."个文件");
             }

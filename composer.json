@@ -1,5 +1,6 @@
 {
     "require": {
-        "dariuszp/cli-progress-bar": "*"
+        "dariuszp/cli-progress-bar": "*",
+        "mxmilu666/nyadav": "^1.5"
     }
 }

@@ -74,12 +74,20 @@ $config=[
         ],
     ],
     "file"=> [
-        "cache_dir"=> "./cache",//缓存文件夹
+        "cache_dir"=> "./cache",//缓存路径
         "check"=> "size",//检查文件策略(hash:检查文件hash size:检查文件大小 exists:检查文件是否存在)
         "database_dir"=> "./database",//访问数据数据库目录
+        "webdav"=>[
+            "support"=> false,//webdav 支持,开启后自动关闭本地模式
+            "url"=> "http://114514.com:1145/",
+            "endpoint"=> "/dav/download",
+            "username"=> "114514",
+            "password"=> "114514",
+            "MaxConcurrent"=> 60,//同步使用的线程
+        ]
     ],
     "advanced"=> [
-        "Centerurl"=> "https://openbmclapi.bangbang93.com",//主控链接(不建议调整)
+        "Centerurl"=> "https://openbmclapi.staging.bangbang93.com",//主控链接(不建议调整)
         "keepalive"=> 60,//keepalive时间,秒为单位(不建议调整)
         "MaxConcurrent"=> 30,//下载使用的线程
         "Debug"=> false,//Debug开关
@@ -121,7 +129,7 @@ PHPOpenBmclApi 采用独立版本号+官方版本号的形式
 * 你可以使用 [static-php-cli](https://github.com/crazywhalecc/static-php-cli) 或者等我打包出 phar 文件后封装成二进制程序（TODO）
 
 3. 为什么不支持多 Webdav /存储？
-* 因为我跟随 Node 版，以 Node 版为规范，并且 BangBang93 一向反对单节点多存储，所以不考虑支持
+* 因为我跟随 Node 版，以 Node 版为规范，并且 BangBang93 一向反对单节点多存储，所以不考虑支持 (绝对不是因为我懒)
 
 4. 为什么会出现一些奇奇怪怪的故障？
 * 请提交 issues 进一步解决
@@ -150,6 +158,9 @@ PHPOpenBmclApi 采用独立版本号+官方版本号的形式
 **crazywhalecc**
 - [static-php-cli](https://github.com/crazywhalecc/static-php-cli) - 提供了构建独立的 PHP 二进制文件，并含流行的扩展的方案
 
+**Mxmilu666**
+- [NyaDAV](https://github.com/Mxmilu666/NyaDAV) - PHP 和 Swoole 的简单 WebDAV 客户端
+- ~~为什么要感谢我自己？~~
 
 ## ❤ 友情链接
 [bangbang93/openbmclapi](https://github.com/bangbang93/openbmclapi)

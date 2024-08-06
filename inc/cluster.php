@@ -4,6 +4,7 @@ use Swoole\Coroutine;
 use Swoole\Coroutine\Http\Client;
 use Dariuszp\CliProgressBar;
 
+
 class BMCLAPIFile {
     public $path;
     public $hash;
@@ -103,6 +104,26 @@ class cluster{
         $parser = new ParseFileList($this->compressedData);
         $files = $parser->parse();
         return $files;
+    }
+
+    public function FilesCheck($files) {
+        $FilesCheck = new FilesCheck($files);
+        $config = api::getconfig();
+        if($config["file"]["webdav"]["support"]){
+            $Missfile = $FilesCheck->FilesCheckerWebdav();
+        }
+        else{
+            if ($config['file']['check'] == "hash"){
+                $Missfile = $FilesCheck->FilesCheckerhash();
+            }
+            elseif($config['file']['check'] == "size"){
+                $Missfile = $FilesCheck->FilesCheckersize();
+            }
+            elseif($config['file']['check'] == "exists"){
+                $Missfile = $FilesCheck->FilesCheckerexists();
+            }
+        }
+        return $Missfile;
     }
 }
 
@@ -292,9 +313,12 @@ class download {
 class FilesCheck {
     private $filesList;
     private $Missfile;
-
-    public function __construct($filesList) {
+    private $maxConcurrent;
+    private $semaphore;
+    public function __construct($filesList, $maxConcurrent = 60) {
         $this->filesList = $filesList;
+        $this->maxConcurrent = $maxConcurrent;
+        $this->semaphore = new Swoole\Coroutine\Channel($maxConcurrent);
     }
 
     public function FilesCheckerhash() {
@@ -397,4 +421,56 @@ class FilesCheck {
         $bar->end();
         return $this->Missfile;
     }
+
+    public function FilesCheckerWebdav() {
+        mlog("检查策略:Webdav");
+        $bar = new CliProgressBar(count($this->filesList));
+        $bar->setDetails("[FilesChecker][线程数:{$this->maxConcurrent}]");
+        $bar->display();
+        
+        $this->Missfile = []; // 初始化Missfile数组
+        $semaphore = new Swoole\Coroutine\Channel($this->maxConcurrent); // 创建信号量通道
+    
+        foreach ($this->filesList as $file) {
+            global $shouldExit;
+            if ($shouldExit) {
+                break;
+            }
+            $semaphore->push(true);
+            go(function () use ($file, $bar, $semaphore) {
+                $dav = new webdav();
+                if (!$dav->file_exists('/'.substr($file->hash, 0, 2).'/'.$file->hash)){
+                    $this->Missfile[] = new BMCLAPIFile(
+                        $file->path,
+                        $file->hash,
+                        $file->size,
+                        $file->mtime
+                    );
+                } else {
+                    if ($dav->getfilesize('/'.substr($file->hash, 0, 2).'/'.$file->hash) != $file->size) {
+                        $this->Missfile[] = new BMCLAPIFile(
+                            $file->path,
+                            $file->hash,
+                            $file->size,
+                            $file->mtime
+                        );
+                    }
+                }
+                $bar->progress();
+                $semaphore->pop();
+            });
+        }
+    
+        // 等待所有协程完成
+        for ($i = 0; $i < $this->maxConcurrent; $i++) {
+            $semaphore->push(true);
+        }
+        $bar->display();
+        $bar->end();
+        if (empty($this->Missfile)){
+            $this->Missfile = null;
+        }
+        return $this->Missfile;
+    }
+    
 }
