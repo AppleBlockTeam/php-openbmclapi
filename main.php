@@ -12,7 +12,7 @@ api::getconfig($config);
 const PHPOBAVERSION = '1.6.0';
 const VERSION = '1.10.10';
 $download_dir = api::getconfig()['file']['cache_dir'];
-const USERAGENT = 'openbmclapi-cluster/' . VERSION . "(php-openbmclapi ". PHPOBAVERSION ."; php ". substr(PHP_VERSION,0,3) ."; ". php_uname('s') .")";
+define('USERAGENT', 'openbmclapi-cluster/' . VERSION . '(php-openbmclapi ' . PHPOBAVERSION . '; php ' . substr(PHP_VERSION, 0, 3) . '; ' . php_uname('s') . ')');
 mlog("OpenBmclApi on PHP v". PHPOBAVERSION . "-" . VERSION,0,true);
 
 //预处理主控链接
