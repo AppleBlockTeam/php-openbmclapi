@@ -39,8 +39,9 @@ class webdav{
     }
 
     public function file_exists($path){
-        $t =  $this->dav->file_exists(rtrim($this->endpoint, '/').$path);
-        $this->dav->close();
+        $dav = $this->createClient();
+        $t = $dav->file_exists($this->endpoint . $path);
+        $dav->close();
         return $t;
     }
 
@@ -54,6 +55,13 @@ class webdav{
     public function getfileurl($path){
         $dav = $this->createClient();
         $result = $dav->getfile($this->endpoint . $path);
+        $this->dav->close();
+        print_r($result);
+        return $result;
+    }
+    public function uploadfile($localpath,$remotepath){
+        $dav = $this->createClient();
+        $result = $dav->uploadfile($this->endpoint . $remotepath,$localpath);
         $this->dav->close();
         return $result;
     }

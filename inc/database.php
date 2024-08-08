@@ -70,7 +70,7 @@ class Database {
 
     public function getMonthsData(): array {
     $monthlyTraffic = [];
-    $endDate = new DateTime(); // 获取当前日期
+    $endDate = new DateTime(); // 获取今天日期
     $startDate = clone $endDate;
     $startDate->modify('-11 months'); // 回溯11个月，以包含完整的12个月数据
 

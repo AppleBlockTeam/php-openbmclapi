@@ -33,7 +33,7 @@ class socketio {
             $alldata = $client->recv();
             if (empty($alldata)) {
                 $client->close();
-                mlog("与主控的连接断开");
+                mlog("节点和主控的连接断开");
                 break;
             }
             if (!is_bool($alldata)){
@@ -46,7 +46,7 @@ class socketio {
             if ($code[0] == '40'){
                 $jsondata = json_decode(substr($data, strlen($code[0])),true);
                 mlog("[socket.io]Connected sid:{$jsondata['sid']}",1);
-                mlog("已连接主控");
+                mlog("成功连接主控");
                 $this->Connected = true;
             }
             if ($code[0] == '42'){
@@ -80,7 +80,7 @@ class socketio {
                         $enable = api::getinfo();
                         $enable['enable'] = true;
                         api::getinfo($enable);
-                        mlog("节点已启用 Let's Goooooo!");
+                        mlog("节点已经启用 Let's Goooooo!");
                         global $kacounters;
                         $kacounters = new Swoole\Table(1024);
                         $kacounters->column('hits', Swoole\Table::TYPE_FLOAT);
@@ -110,7 +110,7 @@ class socketio {
                 }
                 elseif (isset($jsondata[0][1]) && $jsondata[0][1] == "0"){
                     if($this->rekeepalive <= 3){
-                        mlog("Keep-Alive失败,正在重试({$this->rekeepalive}/3)");
+                        mlog("Keep-Alive保活失败,正在重试({$this->rekeepalive}/3)");
                         global $kadata;
                         $this->ack("keep-alive",$kadata);
                         $this->rekeepalive++;

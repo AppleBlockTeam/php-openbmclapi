@@ -114,7 +114,7 @@ class fileserver {
             else{
                 $url = $request->server['request_uri']."?".$request->server['query_string'];
             }
-            //真的会有启动器不带ua的啊，太神奇了
+            //为什么会TM有傻逼启动器TM连个UA都TM不带了，太TM死妈了
             $request->server['user-agent'] = $request->server['user-agent'] ?? "other";
             mlog(" Serve {$code} | {$request->server['remote_addr']} | {$request->server['server_protocol']} | {$url} | {$request->header['user-agent']};") ;
         });

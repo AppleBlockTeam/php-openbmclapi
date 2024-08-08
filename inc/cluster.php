@@ -116,7 +116,7 @@ class cluster{
         $client = new Client(OPENBMCLAPIURL['host'],OPENBMCLAPIURL['port'],OPENBMCLAPIURL['ssl']);
         $client->set(['timeout' => -1]);
         $client->setHeaders([
-            'User-Agent' => 'openbmclapi-cluster/'.$this->version,
+            'User-Agent' => USERAGENT,
             'Accept' => '*',
             'Authorization' => "Bearer {$this->token}"
         ]);
@@ -259,6 +259,111 @@ class download {
         }
     }
 
+    private function downloaderwebdav(Swoole\Coroutine\Http\Client $client, $file,$bar) {
+        $download_dir = api::getconfig()['file']['cache_dir'];
+        $fileallpath = '/' . substr($file->hash, 0, 2);
+        $filepath = '/' . substr($file->hash, 0, 2) . '/' . $file->hash;
+        $savePath = $download_dir . $filepath;
+        if (!file_exists($download_dir . $fileallpath)) {
+            mkdir($download_dir . $fileallpath, 0777, true);
+        }
+        $file->path = $this->customUrlEncode($file->path);
+        $downloader = $client->download($file->path,$savePath);
+        if (!$downloader) {
+            mlog("Error connecting to the main control:{$client->errMsg}",2);
+            return false;
+        } 
+        elseif($client->statusCode == 200){
+            //上传文件
+            $dav = new webdav();
+            $dav->uploadfile($savePath,$fileallpath);
+            $bar->progress();
+            
+            return true;
+        }
+        else {
+            if(isset($client->getHeaders()['location'])){
+            $client->close();
+
+            //预处理下载连接
+            $location_url = parse_url($client->getHeaders()['location']);
+            $scheme = isset($location_url['scheme']) ? $location_url['scheme'] : '';
+            $ssl = $scheme === 'https' ? true : false;
+
+            $client = new Swoole\Coroutine\Http\Client($location_url['host'], $location_url['port'], $ssl);
+                $client->set([
+                    'timeout' => 60
+                ]);
+                $client->setHeaders([
+                    'Host' => $location_url['host'],
+                    'User-Agent' => USERAGENT,
+                    'Accept' => '*/*',
+                ]);
+                $downloader = $client->download($location_url['path'].'?'.($location_url['query']??''),$savePath);
+            if (in_array($client->statusCode, [301, 302])) {
+                while(in_array($client->statusCode, [301, 302])){
+                    $location_url = parse_url($client->getHeaders()['location']);
+                    $client->close();
+                    if (!isset($array['port'])){
+                        $location_url['port'] = 443;
+                    }
+                    $client = new Swoole\Coroutine\Http\Client($location_url['host'], $location_url['port'], true);
+                    $client->set([
+                        'timeout' => 60
+                    ]);
+                    $client->setHeaders([
+                        'Host' => $location_url['host'],
+                        'User-Agent' => USERAGENT,
+                        'Accept' => '*/*',
+                    ]);
+                    $downloader = $client->download($location_url['path'].'?'.($location_url['query']??''),$savePath);
+                }
+                if (!$downloader) {
+                    echo PHP_EOL;
+                    mlog("{$file->path} Download Failed: {$client->errMsg} | {$location_url['host']}:{$location_url['port']}",2);
+                    $bar->progress();
+                    return false;
+                }
+                else{
+                    //mlog("Download Success");
+                    //上传文件
+                    $dav = new webdav();
+                    $dav->uploadfile($savePath,$fileallpath);
+                    $bar->progress();
+                    return true;
+                }
+            }
+            else{
+                if (!$downloader) {
+                    echo PHP_EOL;
+                    mlog("{$file->path} Download Failed: {$client->errMsg} | {$location_url['host']}:{$location_url['port']}",2);
+                    $bar->progress();
+                    return false;
+                }
+                elseif($client->statusCode >= 400){
+                    echo PHP_EOL;
+                    mlog("{$file->path} Download Failed: {$client->statusCode} | {$location_url['host']}:{$location_url['port']}",2);
+                    $bar->progress();
+                    return false;
+                }
+                else{
+                    //mlog("Download Success");
+                    //上传文件
+                    $dav = new webdav();
+                    $dav->uploadfile($savePath,$fileallpath);
+                    $bar->progress();
+                    return true;
+                }
+            }
+        }
+        else{
+            $bar->progress();
+            return false;
+        }
+        }
+    }
+
+
     public function downloadFiles() {
         $bar = new CliProgressBar(count($this->filesList));
         $bar->setDetails("[Downloader][线程数:{$this->maxConcurrent}]");
@@ -278,10 +383,12 @@ class download {
                     'User-Agent' => USERAGENT,
                     'Accept' => '*/*',
                 ]);
-                if ($this->downloader($client, $file,$bar)) {
+                if(api::getconfig()['file']['webdav']['support']){
+                    $this->downloaderwebdav($client, $file,$bar);
                     $client->close();
                 }
                 else{
+                    $this->downloader($client, $file,$bar);
                     $client->close();
                 }
                 $this->semaphore->pop();
@@ -468,6 +575,7 @@ class FilesCheck {
             go(function () use ($file, $bar, $semaphore) {
                 $dav = new webdav();
                 if (!$dav->file_exists('/'.substr($file->hash, 0, 2).'/'.$file->hash)){
+                    mlog('/'.substr($file->hash, 0, 2).'/'.$file->hash." 不存在",1);
                     $this->Missfile[] = new BMCLAPIFile(
                         $file->path,
                         $file->hash,
@@ -476,6 +584,7 @@ class FilesCheck {
                     );
                 } else {
                     if ($dav->getfilesize('/'.substr($file->hash, 0, 2).'/'.$file->hash) != $file->size) {
+                        mlog('/'.substr($file->hash, 0, 2).'/'.$file->hash." 大小错误",1);
                         $this->Missfile[] = new BMCLAPIFile(
                             $file->path,
                             $file->hash,

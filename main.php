@@ -12,7 +12,7 @@ api::getconfig($config);
 const PHPOBAVERSION = '1.6.0';
 const VERSION = '1.10.10';
 $download_dir = api::getconfig()['file']['cache_dir'];
-const USERAGENT = 'openbmclapi-cluster/' . VERSION . '  ' . 'php-openbmclapi/'.PHPOBAVERSION;
+const USERAGENT = 'openbmclapi-cluster/' . VERSION . "(php-openbmclapi ". PHPOBAVERSION ."; php ". substr(PHP_VERSION,0,3) .";". php_uname('s') .")";
 mlog("OpenBmclApi on PHP v". PHPOBAVERSION . "-" . VERSION,0,true);
 
 //预处理主控链接
@@ -76,7 +76,7 @@ run(function(){
     //建立socketio连接主控
     global $socketio;
     $socketio = new socketio(OPENBMCLAPIURL,$tokendata['token'],$config['advanced']['keepalive']);
-    mlog("正在连接主控");
+    mlog("开始连接主控");
     Coroutine::create(function () use (&$socketio){
         $socketio->connect();
     });
@@ -86,13 +86,13 @@ run(function(){
         $socketio->ack("request-cert");
         Coroutine::sleep(1);
         $allcert = $socketio->Getcert();
-        //写入证书并且是否损坏
+        //写入证书并且确认是否损坏
         if (!file_exists('./cert/'.$config['cluster']['CLUSTER_ID'].'.crt') && !file_exists('./cert/'.$config['cluster']['CLUSTER_ID'].'.key')) {
             mlog("正在获取证书");
             if (!file_exists("./cert")) {
                 mkdir("./cert",0777,true);
             }
-            mlog("已获取证书,到期时间{$allcert['0']['1']['expires']}");
+            mlog("获取证书成功,到期时间{$allcert['0']['1']['expires']}");
             $cert = fopen('./cert/'.$config['cluster']['CLUSTER_ID'].'.crt', 'w');
             $Writtencert = fwrite($cert, $allcert['0']['1']['cert']);
             fclose($cert);
@@ -102,8 +102,8 @@ run(function(){
         }
         $crt = file_get_contents('./cert/'.$config['cluster']['CLUSTER_ID'].'.crt');
         if ($crt!== $allcert['0']['1']['cert']) {
-            mlog("证书损坏/过期");
-            mlog("已获取新的证书,到期时间{$allcert['0']['1']['expires']}");
+            mlog("证书已经损坏/过期");
+            mlog("已经成功获取新的证书,到期时间{$allcert['0']['1']['expires']}");
             $cert = fopen('./cert/'.$config['cluster']['CLUSTER_ID'].'.crt', 'w');
             $Writtencert = fwrite($cert, $allcert['0']['1']['cert']);
             fclose($cert);
@@ -118,7 +118,7 @@ run(function(){
         if(!$config['cluster']['certificates']['use-cert']){
             global $httpserver;
             $httpserver = new fileserver($config['cluster']['host'],$config['cluster']['port'],null,null,$config['cluster']['CLUSTER_SECRET'],false);
-            mlog("byoc 已开启并且 use-cert 已关闭，请自备反代！");
+            mlog("byoc 已经被开启并且 use-cert 已关闭，请自己准备反代！");
         }
         else{
             global $httpserver;
@@ -160,20 +160,19 @@ run(function(){
     api::getinfo($isSynchronized);
     //循环到没有Missfile这个变量
     if (is_array($Missfile)){
-        mlog("缺失/损坏".count($Missfile)."个文件");
+        mlog("丢失/损坏".count($Missfile)."个文件");
         while(is_array($Missfile)){
-            print_r($Missfile);
             $download = new download($Missfile,$config['advanced']['MaxConcurrent']);
             $download->downloadFiles();
-            $Missfile = $cluster->FilesCheck($Missfile);
+            $Missfile = $cluster->FilesCheck($Missfile,api::getconfig()['file']['webdav']['MaxConcurrent']);
             if (is_array($Missfile)){
-                //mlog("缺失/损坏".count($Missfile)."个文件");
+                mlog("丢失/损坏".count($Missfile)."个文件");
             }
             else{
                 $isSynchronized = api::getinfo();
                 $isSynchronized['isSynchronized'] = false;
                 api::getinfo($isSynchronized);
-                mlog("检查文件完毕,没有缺失/损坏");
+                mlog("文件检测完成,没有缺失/损坏");
             }
         }
     }
@@ -183,12 +182,12 @@ run(function(){
             $isSynchronized = api::getinfo();
             $isSynchronized['isSynchronized'] = false;
             api::getinfo($isSynchronized);
-            mlog("检查文件完毕,没有缺失/损坏");
+            mlog("文件检测完成,没有缺失/损坏");
         }
     }
     global $shouldExit;
     if (!is_array($Missfile) && !$shouldExit){//判断Missfile是否为空和是否是主动退出
-        //enable节点
+        //开启节点
         $socketio->enable($config['cluster']['public_host'],$config['cluster']['public_port'],$config['cluster']['byoc']);
     }
 });

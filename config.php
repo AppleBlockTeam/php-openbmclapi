@@ -15,7 +15,7 @@ $config=[
         ],
     ],
     "file"=> [
-        "cache_dir"=> "./cache",//缓存路径
+        "cache_dir"=> "./cache",//文件路径(如开启 webdav 为缓存目录)
         "check"=> "size",//检查文件策略(hash:检查文件hash size:检查文件大小 exists:检查文件是否存在)
         "database_dir"=> "./database",//访问数据数据库目录
         "webdav"=>[
@@ -29,8 +29,8 @@ $config=[
     ],
     "advanced"=> [
         "Centerurl"=> "https://openbmclapi.staging.bangbang93.com",//主控链接(不建议调整)
-        "keepalive"=> 60,//keepalive时间,秒为单位(不建议调整)
-        "MaxConcurrent"=> 30,//下载使用的线程
-        "Debug"=> false,//Debug开关
+        "keepalive"=> 60,//保活时间,秒为单位(不建议调整)
+        "MaxConcurrent"=> 30,//同步/下载使用的线程
+        "Debug"=> false,//调试开关
     ],
 ];

@@ -13,7 +13,7 @@ class token{
         //获取challenge
         $client = new Client(OPENBMCLAPIURL['host'],OPENBMCLAPIURL['port'],OPENBMCLAPIURL['ssl']);
         $client->setHeaders([
-            'User-Agent' => 'openbmclapi-cluster/'.$this->version,
+            'User-Agent' => USERAGENT,
             'Content-Type' => 'application/json; charset=utf-8',
         ]);
         $client->set(['timeout' => 20]);
