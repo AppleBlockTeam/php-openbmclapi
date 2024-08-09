@@ -68,6 +68,7 @@ class fileserver {
                         }
                         $length = $end_byte - $start_byte + 1;
                         $code = 206;
+                        $response->status($code);
                         $response->header('Content-Type', 'application/octet-stream');
                         if(isset($request->header['name'])){
                              $response->header('Content-Disposition', 'attachment; filename='.$request->get['name']);
