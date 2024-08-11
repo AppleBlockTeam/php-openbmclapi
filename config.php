@@ -25,12 +25,13 @@ $config=[
             "username"=> "114514",
             "password"=> "114514",
             "MaxConcurrent"=> 60,//同步使用的线程
+            "CacheTime"=> 60,//缓存时间(以分钟为单位)
         ]
     ],
     "advanced"=> [
         "Centerurl"=> "https://openbmclapi.staging.bangbang93.com",//主控链接(不建议调整)
         "keepalive"=> 60,//保活时间,秒为单位(不建议调整)
-        "MaxConcurrent"=> 30,//同步/下载使用的线程
+        "MaxConcurrent"=> 60,//同步/下载使用的线程
         "Debug"=> false,//调试开关
     ],
 ];
