@@ -10,7 +10,7 @@ foreach ($list as $file) {
 }
 api::getconfig($config);
 const PHPOBAVERSION = '1.6.0';
-const VERSION = '1.10.10';
+const VERSION = '1.11.0';
 $download_dir = api::getconfig()['file']['cache_dir'];
 define('USERAGENT', 'openbmclapi-cluster/' . VERSION . '(php-openbmclapi ' . PHPOBAVERSION . '; php ' . substr(PHP_VERSION, 0, 3) . '; ' . php_uname('s') . ')');
 mlog("OpenBmclApi on PHP v". PHPOBAVERSION . "-" . VERSION,0,true);

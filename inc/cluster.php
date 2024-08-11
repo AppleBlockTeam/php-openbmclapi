@@ -116,7 +116,7 @@ class cluster{
         $client = new Client(OPENBMCLAPIURL['host'],OPENBMCLAPIURL['port'],OPENBMCLAPIURL['ssl']);
         $client->set(['timeout' => -1]);
         $client->setHeaders([
-            'User-Agent' => USERAGENT,
+            'User-Agent' => 'openbmclapi-cluster/' . VERSION,
             'Accept' => '*',
             'Authorization' => "Bearer {$this->token}"
         ]);
@@ -134,8 +134,8 @@ class cluster{
         return $files;
     }
 
-    public function FilesCheck($files) {
-        $FilesCheck = new FilesCheck($files);
+    public function FilesCheck($files,$MaxConcurrent) {
+        $FilesCheck = new FilesCheck($files,$MaxConcurrent);
         $config = api::getconfig();
         if($config["file"]["webdav"]["support"]){
             $Missfile = $FilesCheck->FilesCheckerWebdav();
@@ -276,7 +276,7 @@ class download {
         elseif($client->statusCode == 200){
             //上传文件
             $dav = new webdav();
-            $dav->uploadfile($savePath,$fileallpath);
+            $dav->uploadfile($savePath,$filepath);
             $bar->progress();
             
             return true;
@@ -328,7 +328,7 @@ class download {
                     //mlog("Download Success");
                     //上传文件
                     $dav = new webdav();
-                    $dav->uploadfile($savePath,$fileallpath);
+                    $dav->uploadfile($savePath,$filepath);
                     $bar->progress();
                     return true;
                 }
@@ -350,7 +350,7 @@ class download {
                     //mlog("Download Success");
                     //上传文件
                     $dav = new webdav();
-                    $dav->uploadfile($savePath,$fileallpath);
+                    $dav->uploadfile($savePath,$filepath);
                     $bar->progress();
                     return true;
                 }
@@ -450,7 +450,7 @@ class FilesCheck {
     private $Missfile;
     private $maxConcurrent;
     private $semaphore;
-    public function __construct($filesList, $maxConcurrent = 60) {
+    public function __construct($filesList, $maxConcurrent) {
         $this->filesList = $filesList;
         $this->maxConcurrent = $maxConcurrent;
         $this->semaphore = new Swoole\Coroutine\Channel($maxConcurrent);
