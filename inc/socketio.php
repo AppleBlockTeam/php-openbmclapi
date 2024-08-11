@@ -46,6 +46,11 @@ class socketio {
                 $this->reconnect();
                 break;
             }
+            
+            global $shouldExit;
+            if($shouldExit){
+                exits();
+            }
 
             if (!is_bool($alldata)) {
                 $this->data = $data = $alldata->data;
@@ -139,6 +144,7 @@ class socketio {
                         if (strpos($jsondata[0][0]["message"], "Error") !== false) {
                             mlog("节点启用失败", 2);
                             exits();
+                            break;
                         }
                     } else {
                         mlog("[socket.io]Got data {$data}");

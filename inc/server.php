@@ -241,7 +241,7 @@ class fileserver {
                     //    $download->downloadnopoen($downloadhash);
                     //}
                     $code = 302;
-                    $url = $this->getfileurl($filepath);
+                    $url = $this->getfileurl($filepath,$downloadhash);
                     //判断是否获取分片文件
                     if(isset($request->header['range'])){
                         preg_match('/bytes=(\d+)-(\d+)?/', $request->header['range'], $matches);
@@ -292,8 +292,8 @@ class fileserver {
         });
     }
 
-    public function getfileurl($filepath) {
+    public function getfileurl($filepath,$hash) {
         $webdav = new webdav();
-        return $webdav->getfileurl($filepath);
+        return $webdav->getfileurl($filepath,$hash);
     }
 }

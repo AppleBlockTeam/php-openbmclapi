@@ -401,7 +401,7 @@ class download {
         $bar->end();
     }
 
-    public function downloadnopoen($hash) {
+    public function downloadnopoen($hash,$webdav = false) {
         $download_dir = api::getconfig()['file']['cache_dir'];
         $tokenapi = api::getinfo();
         $filePath = $download_dir . '/' . substr($hash, 0, 2) . '/';
@@ -424,7 +424,17 @@ class download {
             return false;
         } 
         elseif($client->statusCode == "200"){
-            return true;
+            if($webdav){
+                $savePath = $download_dir . $filepath;
+                $filepath = '/' . substr($hash, 0, 2) . '/' . $hash;
+                new webdav();
+                $dav = new webdav();
+                $dav->uploadfile($savePath,$filepath);
+                return true;
+            }
+            else{
+                return true;  
+            }
         }
         else{
             return false;
